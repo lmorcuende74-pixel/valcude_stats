@@ -674,8 +674,8 @@
             registerAction(selectedTouchDorsal, actionName);
         }
 
-        // --- MOTOR DE RECONOCIMIENTO DE VOZ ÓPTIMO PARA iOS ---
-        function toggleListening() {
+        // --- MOTOR DE RECONOCIMIENTO DE VOZ BLINDADO PARA iOS SAFARI ---
+        async function toggleListening() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
                 alert("El reconocimiento de voz no está soportado en este navegador.");
@@ -684,14 +684,21 @@
 
             if (isListening) {
                 if (recognition) {
-                    try { recognition.abort(); } catch(e){}
+                    try { recognition.stop(); } catch(e){}
                 }
                 stopListeningVisuals();
-                recognition = null;
                 return;
             }
 
-            // Destruir instancia previa para evitar el bloqueo zombi en iOS Safari
+            // Forzar la liberación del canal de audio de iOS Safari mediante getUserMedia limpio
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop());
+            } catch (err) {
+                console.log("Audio session notice:", err);
+            }
+
+            // Destruir instancia previa por completo
             if (recognition) {
                 try { recognition.abort(); } catch(e){}
                 recognition = null;
