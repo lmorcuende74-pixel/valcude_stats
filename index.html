@@ -114,8 +114,6 @@
 
             <!-- Panel de Voz con Guía de Comandos Visual -->
             <div class="bg-white rounded-2xl p-4 shadow-sm border border-emerald-900/10 text-center flex flex-col items-center">
-                
-                <!-- Ayuda Visual de Comandos -->
                 <div class="w-full bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 mb-3 text-left">
                     <p class="text-[11px] font-extrabold text-emerald-900 uppercase mb-1.5 flex items-center justify-between">
                         <span>💡 Guía de Comandos (Ejemplos)</span>
@@ -351,7 +349,7 @@
             db = null;
         }
 
-        if (!db || !db.teams || !db.rosters || Array.isArray(db.rosters)) {
+        if (!db || !db.teams || !db.rosters || typeof db.rosters !== 'object' || Array.isArray(db.rosters)) {
             db = {
                 teams: ["Valcude Infantil Verde", "Valcude Infantil Blanco"],
                 rosters: {
@@ -368,6 +366,11 @@
                 matches: []
             };
             localStorage.setItem('valcude_db', JSON.stringify(db));
+        } else {
+            // Asegurar que cada equipo tiene su entrada en rosters
+            db.teams.forEach(t => {
+                if (!db.rosters[t]) db.rosters[t] = [];
+            });
         }
 
         let currentMatchId = null;
@@ -426,7 +429,8 @@
         function renderTeamSelectors() {
             const select = document.getElementById('matchTeam');
             if(select) {
-                select.innerHTML = db.teams.map(t => `<option value="${t}">${t}</option>`).join('');
+                const currentVal = select.value;
+                select.innerHTML = db.teams.map(t => `<option value="${t}" ${t === currentVal ? 'selected' : ''}>${t}</option>`).join('');
             }
         }
 
@@ -471,7 +475,8 @@
         function renderAdminRosterSelect() {
             const select = document.getElementById('adminTeamSelect');
             if(select) {
-                select.innerHTML = db.teams.map(t => `<option value="${t}">${t}</option>`).join('');
+                const currentVal = select.value;
+                select.innerHTML = db.teams.map(t => `<option value="${t}" ${t === currentVal ? 'selected' : ''}>${t}</option>`).join('');
                 renderAdminRoster();
             }
         }
@@ -502,7 +507,7 @@
         function addRosterPlayer(e) {
             e.preventDefault();
             const select = document.getElementById('adminTeamSelect');
-            if(!select) return;
+            if(!select || !select.value) return;
             const teamName = select.value;
             const dorsalInput = document.getElementById('newPlayerDorsal');
             const nameInput = document.getElementById('newPlayerName');
@@ -923,4 +928,28 @@
         function exportAnalyticsCSV() {
             const match = db.matches.find(m => m.id === currentMatchId);
             if(!match || match.stats.length === 0) {
-                alert("No hay datos
+                alert("No hay datos para exportar.");
+                return;
+            }
+
+            const summary = calculatePlayerStats(match);
+            let csvContent = "Dorsal,Nombre,Puntos,T2_Anotados,T2_Intentados,T2_%,T3_Anotados,T3_Intentados,T3_%,TL_Anotados,TL_Intentados,TL_%,Rebotes,Asistencias,Robos,Perdidas,Faltas\n" 
+                + summary.map(p => `${p.dorsal},"${p.name}",${p.pts},${p.t2_m},${p.t2_a},${p.t2_pct}%,${p.t3_m},${p.t3_a},${p.t3_pct}%,${p.tl_m},${p.tl_a},${p.tl_pct}%,${p.reb},${p.ast},${p.stl},${p.tov},${p.pf}`).join("\n");
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            
+            const safeTeam = match.team.replace(/[^a-zA-Z0-9]/g, '_');
+            const safeRival = match.rival.replace(/[^a-zA-Z0-9]/g, '_');
+            link.setAttribute("href", url);
+            link.setAttribute("download", `estadisticas_analiticas_${safeTeam}_vs_${safeRival}.csv`);
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
