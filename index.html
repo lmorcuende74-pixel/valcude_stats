@@ -34,18 +34,17 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Cabecera con Escudo Oficial Integrado -->
+    <!-- Cabecera -->
     <header class="bg-valcude text-white px-4 py-3 flex items-center justify-between shadow-md sticky top-0 z-30">
         <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('matches')">
             <div class="w-10 h-10 bg-white rounded-xl p-1.5 flex items-center justify-center shadow">
-                <!-- Escudo Valcude en SVG Optimizado -->
                 <svg viewBox="0 0 24 24" class="w-full h-full text-emerald-900" fill="currentColor">
                     <path d="M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3zm0 2.18l7 2.33v4.99c0 4.67-3.13 9.03-7 10.27-3.87-1.24-7-5.6-7-10.27V6.51l7-2.33zm-1.5 4.82v6h3v-6h-3zm0 7.5v2.5h3v-2.5h-3z"/>
                 </svg>
             </div>
             <div>
-                <h1 class="font-extrabold text-sm tracking-wide" id="headerTitle">VALCUDE STATS</h1>
-                <p class="text-[11px] text-emerald-300" id="headerSubtitle">Gestión Anual Multipartido</p>
+                <h1 class="font-extrabold text-sm tracking-wide">VALCUDE STATS</h1>
+                <p class="text-[11px] text-emerald-300">Gestión Anual Multipartido</p>
             </div>
         </div>
         <div class="flex items-center space-x-2">
@@ -58,7 +57,7 @@
     <!-- Contenido Principal -->
     <main class="flex-1 p-4 max-w-lg mx-auto w-full flex flex-col space-y-4">
 
-        <!---------------- VISTA 1: LISTA DE PARTIDOS Y NUEVO PARTIDO ---------------->
+        <!---------------- VISTA 1: LISTA DE PARTIDOS ---------------->
         <div id="view-matches" class="view flex flex-col space-y-4">
             <div class="bg-white rounded-2xl p-4 shadow-sm border border-emerald-900/10">
                 <h2 class="font-extrabold text-sm text-emerald-900 mb-3 uppercase tracking-wider">Configurar Nuevo Partido</h2>
@@ -66,7 +65,6 @@
                     <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Equipo Propio / Categoría</label>
                         <select id="matchTeam" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm font-medium focus:outline-none focus:border-emerald-600">
-                            <!-- Se carga dinámicamente -->
                         </select>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
@@ -86,49 +84,42 @@
             </div>
 
             <div class="bg-white rounded-2xl p-4 shadow-sm border border-emerald-900/10 flex-1">
-                <h2 class="font-extrabold text-sm text-emerald-900 mb-3 uppercase tracking-wider">Historial de Partidos de la Temporada</h2>
-                <div id="matchesList" class="space-y-2">
-                    <!-- Lista de partidos cargados -->
-                </div>
+                <h2 class="font-extrabold text-sm text-emerald-900 mb-3 uppercase tracking-wider">Historial de Partidos</h2>
+                <div id="matchesList" class="space-y-2"></div>
             </div>
         </div>
 
-        <!---------------- VISTA 2: PARTIDO EN CURSO Y VOZ ---------------->
+        <!---------------- VISTA 2: PARTIDO EN CURSO (CONTROL POR VOZ CONTINUA) ---------------->
         <div id="view-live" class="view hidden flex flex-col space-y-4">
             <div class="bg-valcude text-white rounded-2xl p-4 shadow flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-white rounded-lg p-1 flex items-center justify-center shrink-0">
-                        <svg viewBox="0 0 24 24" class="w-full h-full text-emerald-900" fill="currentColor">
-                            <path d="M12 2L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-3zm0 2.18l7 2.33v4.99c0 4.67-3.13 9.03-7 10.27-3.87-1.24-7-5.6-7-10.27V6.51l7-2.33zm-1.5 4.82v6h3v-6h-3zm0 7.5v2.5h3v-2.5h-3z"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <span id="liveMatchSubtitle" class="text-[10px] text-emerald-300 uppercase font-bold tracking-wider"></span>
-                        <h2 id="liveMatchTitle" class="font-extrabold text-base"></h2>
-                    </div>
+                <div>
+                    <span id="liveMatchSubtitle" class="text-[10px] text-emerald-300 uppercase font-bold tracking-wider"></span>
+                    <h2 id="liveMatchTitle" class="font-extrabold text-base"></h2>
                 </div>
                 <button onclick="switchView('matches')" class="bg-white/10 text-xs px-3 py-1.5 rounded-lg shrink-0">Salir</button>
             </div>
 
-            <!-- Panel de Voz -->
-            <div class="bg-white rounded-2xl p-5 shadow-sm border border-emerald-900/10 text-center flex flex-col items-center">
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Dictar jugada (Ej: "33 rebote ofensivo")</p>
+            <!-- Panel de Voz Gigante -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-emerald-900/10 text-center flex flex-col items-center">
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Dictar jugada (Ej: "33 falla tiro de dos")</p>
+                
                 <button id="micBtn" onclick="toggleListening()" class="w-24 h-24 rounded-full btn-orange text-white flex items-center justify-center shadow-lg transition active:scale-95">
                     <svg id="micIcon" xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                     </svg>
                 </button>
-                <div id="statusText" class="mt-3 text-sm font-semibold text-gray-700">Micrófono en espera</div>
+
+                <div id="statusText" class="mt-3 text-sm font-semibold text-gray-700">Pulsa el micro para hablar</div>
                 <div id="transcript" class="mt-1 text-xs text-emerald-700 italic min-h-[18px]"></div>
             </div>
 
-            <!-- Tabla de Estadísticas del Partido -->
+            <!-- Tabla de Estadísticas -->
             <div class="bg-white rounded-2xl shadow-sm border border-emerald-900/10 overflow-hidden flex-1 flex flex-col">
                 <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
                     <h3 class="font-bold text-xs uppercase tracking-wider text-gray-600">Acciones Registradas</h3>
                     <button onclick="exportCurrentMatchCSV()" class="text-xs text-emerald-700 font-bold hover:underline">Exportar CSV</button>
                 </div>
-                <div class="overflow-x-auto flex-1 max-h-[300px]">
+                <div class="overflow-x-auto flex-1 max-h-[260px]">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
                             <tr class="bg-emerald-900/5 text-emerald-900 text-[11px] uppercase tracking-wider">
@@ -140,29 +131,26 @@
                         <tbody id="statsTableBody" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
-                <div id="emptyState" class="p-6 text-center text-gray-400 text-xs">Sin acciones aún. Dicta algo o usa el micro.</div>
+                <div id="emptyState" class="p-6 text-center text-gray-400 text-xs">Sin acciones aún. Dicta algo (ej: "33 falla tiro de dos").</div>
             </div>
         </div>
 
-        <!---------------- VISTA 3: ADMINISTRACIÓN (Equipos y Resets) ---------------->
+        <!---------------- VISTA 3: ADMINISTRACIÓN ---------------->
         <div id="view-admin" class="view hidden flex flex-col space-y-4">
             <div class="bg-white rounded-2xl p-4 shadow-sm border border-emerald-900/10">
                 <h2 class="font-extrabold text-sm text-emerald-900 mb-3 uppercase tracking-wider">Gestión de Equipos</h2>
                 <form onsubmit="addNewTeam(event)" class="flex gap-2 mb-3">
-                    <input type="text" id="newTeamName" required placeholder="Nombre del equipo (ej: Valcude Infantil Verde)" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-600">
+                    <input type="text" id="newTeamName" required placeholder="Nombre del equipo" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-600">
                     <button type="submit" class="btn-green text-white font-bold px-4 py-2.5 rounded-xl text-sm shadow">Añadir</button>
                 </form>
-                <div id="teamsList" class="space-y-2">
-                    <!-- Lista de equipos -->
-                </div>
+                <div id="teamsList" class="space-y-2"></div>
             </div>
 
             <div class="bg-white rounded-2xl p-4 shadow-sm border border-emerald-900/10">
                 <h2 class="font-extrabold text-sm text-red-700 mb-2 uppercase tracking-wider">Zona de Reinicio</h2>
-                <p class="text-xs text-gray-500 mb-3">Aquí puedes resetear las estadísticas de un partido concreto o vaciar toda la base de datos anual.</p>
                 <div class="flex gap-2">
                     <button onclick="resetCurrentMatchStats()" class="flex-1 bg-red-50 text-red-600 font-bold py-2.5 rounded-xl text-xs border border-red-200">Resetear Partido Actual</button>
-                    <button onclick="clearAllData()" class="bg-red-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs">Borrar Todo (Año)</button>
+                    <button onclick="clearAllData()" class="bg-red-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs">Borrar Todo</button>
                 </div>
             </div>
 
@@ -171,7 +159,7 @@
 
     </main>
 
-    <!-- Script General y Almacenamiento Local -->
+    <!-- Script General con Procesador de Tiros Anotados y Fallados -->
     <script>
         let db = JSON.parse(localStorage.getItem('valcude_db')) || {
             teams: ["Valcude Infantil Verde", "Valcude Infantil Blanco"],
@@ -181,12 +169,17 @@
         let currentMatchId = null;
         let isListening = false;
         let recognition = null;
+        let shouldKeepListening = false;
 
         function saveDB() {
             localStorage.setItem('valcude_db', JSON.stringify(db));
         }
 
         function switchView(viewName) {
+            if(viewName !== 'live' && recognition) {
+                shouldKeepListening = false;
+                try { recognition.stop(); } catch(e){}
+            }
             document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
             document.getElementById(`view-${viewName}`).classList.remove('hidden');
             if (viewName === 'matches') renderMatchesList();
@@ -213,7 +206,7 @@
         }
 
         function deleteTeam(teamName) {
-            if(confirm(`¿Seguro que deseas eliminar el equipo ${teamName}?`)) {
+            if(confirm(`¿Deseas eliminar el equipo ${teamName}?`)) {
                 db.teams = db.teams.filter(t => t !== teamName);
                 saveDB();
                 renderAdminPanel();
@@ -247,10 +240,8 @@
 
             db.matches.unshift(newMatch);
             saveDB();
-
             document.getElementById('matchRival').value = '';
             document.getElementById('matchJornada').value = '';
-
             openMatch(newMatch.id);
         }
 
@@ -261,13 +252,12 @@
 
             document.getElementById('liveMatchTitle').innerText = `${match.team} vs ${match.rival}`;
             document.getElementById('liveMatchSubtitle').innerText = `${match.jornada} · ${match.date}`;
-            
             renderStatsTable();
             switchView('live');
         }
 
         function deleteMatch(matchId) {
-            if(confirm("¿Seguro que quieres borrar este partido y todo su historial de estadísticas?")) {
+            if(confirm("¿Borrar este partido y sus estadísticas?")) {
                 db.matches = db.matches.filter(m => m.id !== matchId);
                 saveDB();
                 renderMatchesList();
@@ -277,7 +267,7 @@
         function renderMatchesList() {
             const container = document.getElementById('matchesList');
             if(db.matches.length === 0) {
-                container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No hay partidos registrados esta temporada. ¡Crea uno arriba!</p>`;
+                container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No hay partidos registrados esta temporada.</p>`;
                 return;
             }
 
@@ -297,89 +287,119 @@
         }
 
         function resetCurrentMatchStats() {
-            if(confirm("¿Estás seguro de resetear/borrar todas las estadísticas de este partido actual?")) {
+            if(confirm("¿Resetear las estadísticas de este partido?")) {
                 const match = db.matches.find(m => m.id === currentMatchId);
                 if(match) {
                     match.stats = [];
                     saveDB();
                     renderStatsTable();
-                    alert("Estadísticas del partido reseteadas a cero.");
                 }
             }
         }
 
         function clearAllData() {
-            if(confirm("¡ATENCIÓN! Esto borrará TODOS los partidos y estadísticas de todo el año. ¿Estás seguro?")) {
+            if(confirm("¿Borrar TODOS los datos de la temporada?")) {
                 db.matches = [];
                 saveDB();
                 switchView('matches');
             }
         }
 
+        // --- MOTOR DE VOZ ---
         function initSpeechRecognition() {
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                recognition = new SpeechRecognition();
-                recognition.lang = 'es-ES';
-                recognition.continuous = false;
-                recognition.interimResults = false;
-
-                recognition.onstart = () => {
-                    isListening = true;
-                    document.getElementById('micBtn').classList.add('listening');
-                    document.getElementById('statusText').innerText = "Escuchando...";
-                    document.getElementById('statusText').classList.add('text-orange-600');
-                };
-
-                recognition.onresult = (event) => {
-                    const text = event.results[0][0].transcript.toLowerCase();
-                    document.getElementById('transcript').innerText = `"${text}"`;
-                    processCommand(text);
-                };
-
-                recognition.onerror = () => { stopListeningVisuals(); };
-                recognition.onend = () => { stopListeningVisuals(); };
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("El reconocimiento de voz no está soportado en este navegador.");
+                return;
             }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('micBtn').classList.add('listening');
+                document.getElementById('statusText').innerText = "Escuchando jugada...";
+                document.getElementById('statusText').classList.add('text-orange-600');
+            };
+
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript.toLowerCase();
+                document.getElementById('transcript').innerText = `"${text}"`;
+                processVoiceCommand(text);
+            };
+
+            recognition.onerror = () => {};
+
+            recognition.onend = () => {
+                if (shouldKeepListening) {
+                    try { recognition.start(); } catch(e) { stopListeningVisuals(); }
+                } else {
+                    stopListeningVisuals();
+                }
+            };
         }
 
         function toggleListening() {
-            if (!recognition) {
-                alert("El reconocimiento de voz no está soportado en este navegador. Usa Safari en iOS.");
-                return;
-            }
-            if (isListening) recognition.stop();
-            else {
-                try { recognition.start(); } catch(e) { console.error(e); }
+            if (!recognition) return;
+
+            if (isListening) {
+                shouldKeepListening = false;
+                recognition.stop();
+            } else {
+                shouldKeepListening = true;
+                try { recognition.start(); } catch(e) {}
             }
         }
 
         function stopListeningVisuals() {
             isListening = false;
+            shouldKeepListening = false;
             document.getElementById('micBtn').classList.remove('listening');
-            document.getElementById('statusText').innerText = "Micrófono en espera";
+            document.getElementById('statusText').innerText = "Pulsa el micro para hablar";
             document.getElementById('statusText').classList.remove('text-orange-600');
         }
 
-        function processCommand(phrase) {
+        // --- PROCESADOR DE COMANDOS DE VOZ AMPLIADO ---
+        function processVoiceCommand(phrase) {
             const numbers = phrase.match(/\d+/g);
-            if (!numbers) {
-                alert("No se detectó el dorsal. Ejemplo: '33 rebote'.");
+            if (!numbers || numbers.length === 0) {
+                document.getElementById('transcript').innerText = `No se oyó dorsal en: "${phrase}"`;
                 return;
             }
             const dorsal = numbers[0];
-            let action = "Desconocida";
+            let action = "Acción de juego";
 
-            if (phrase.includes("rebote ofensivo")) action = "Rebote Ofensivo (+)";
-            else if (phrase.includes("rebote")) action = "Rebote Defensivo";
-            else if (phrase.includes("canasta de dos") || phrase.includes("anota dos")) action = "Canasta 2 Pts (+2)";
-            else if (phrase.includes("falla dos") || phrase.includes("falla tiro de dos")) action = "Fallo Tiro de 2";
-            else if (phrase.includes("triple") || phrase.includes("anota tres")) action = "Triple (+3)";
-            else if (phrase.includes("falla triple")) action = "Fallo Triple";
-            else if (phrase.includes("falta")) action = "Falta Personal";
-            else if (phrase.includes("robo")) action = "Robo";
-            else if (phrase.includes("perdida")) action = "Pérdida de Balón";
-            else if (phrase.includes("asistencia")) action = "Asistencia";
-            else {
+            // Lógica de Tiros Libres, Tiros de 2, Triples y resto de acciones
+            if (phrase.includes("tiro libre anotado") || phrase.includes("anota tiro libre") || phrase.includes("anota un tiro libre") || (phrase.includes("tiro libre") && (phrase.includes("anota") || phrase.includes("mete")))) {
+                action = "Tiro Libre Anotado (+1)";
+            } else if (phrase.includes("tiro libre fallado") || phrase.includes("falla tiro libre") || phrase.includes("falla un tiro libre")) {
+                action = "Tiro Libre Fallado";
+            } else if (phrase.includes("tiro libre")) {
+                action = "Tiro Libre Anotado (+1)"; // Por defecto si solo dice "tiro libre"
+            } else if (phrase.includes("rebote ofensivo")) {
+                action = "Rebote Ofensivo (+)";
+            } else if (phrase.includes("rebote")) {
+                action = "Rebote Defensivo";
+            } else if (phrase.includes("falla tiro de dos") || phrase.includes("falla dos") || phrase.includes("falla canasta de dos") || phrase.includes("falla de dos")) {
+                action = "Fallo Tiro de 2";
+            } else if (phrase.includes("canasta de dos") || phrase.includes("anota dos") || phrase.includes("tiro de dos anotado") || phrase.includes("canasta dos")) {
+                action = "Canasta 2 Pts (+2)";
+            } else if (phrase.includes("falla triple") || phrase.includes("falla tres") || phrase.includes("falla de tres")) {
+                action = "Fallo Triple";
+            } else if (phrase.includes("triple") || phrase.includes("anota tres") || phrase.includes("canasta de tres")) {
+                action = "Triple (+3)";
+            } else if (phrase.includes("falta")) {
+                action = "Falta Personal";
+            } else if (phrase.includes("robo")) {
+                action = "Robo";
+            } else if (phrase.includes("perdida")) {
+                action = "Pérdida de Balón";
+            } else if (phrase.includes("asistencia")) {
+                action = "Asistencia";
+            } else {
                 action = phrase.replace(dorsal, '').trim();
                 action = action.charAt(0).toUpperCase() + action.slice(1);
             }
@@ -418,7 +438,7 @@
         function exportCurrentMatchCSV() {
             const match = db.matches.find(m => m.id === currentMatchId);
             if(!match || match.stats.length === 0) {
-                alert("No hay datos para exportar en este partido.");
+                alert("No hay datos para exportar.");
                 return;
             }
             let csvContent = "data:text/csv;charset=utf-8,Dorsal,Accion,Hora\n" 
