@@ -367,7 +367,6 @@
             };
             localStorage.setItem('valcude_db', JSON.stringify(db));
         } else {
-            // Asegurar que cada equipo tiene su entrada en rosters
             db.teams.forEach(t => {
                 if (!db.rosters[t]) db.rosters[t] = [];
             });
@@ -676,11 +675,12 @@
             registerAction(selectedTouchDorsal, actionName);
         }
 
-        // --- MOTOR DE RECONOCIMIENTO DE VOZ FLEXIBLE ---
+        // --- MOTOR DE RECONOCIMIENTO DE VOZ ROBUSTO (Bucle infinito seguro en iOS Safari) ---
         function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) return;
 
+            // Recrear siempre una instancia fresca para evitar bloqueos en iOS
             recognition = new SpeechRecognition();
             recognition.lang = 'es-ES';
             recognition.continuous = false;
@@ -705,7 +705,10 @@
             };
 
             recognition.onerror = () => { stopListeningVisuals(); };
-            recognition.onend = () => { stopListeningVisuals(); };
+            recognition.onend = () => { 
+                stopListeningVisuals(); 
+                initSpeechRecognition(); // Regenerar la instancia al terminar para permitir el siguiente uso
+            };
         }
 
         function toggleListening() {
@@ -721,8 +724,9 @@
                 try {
                     recognition.start();
                 } catch(e) {
-                    try { recognition.abort(); } catch(err){}
-                    setTimeout(() => { try { recognition.start(); } catch(err){} }, 150);
+                    // Si se quedara bloqueado, reinicializamos y reintentamos inmediatamente
+                    initSpeechRecognition();
+                    try { recognition.start(); } catch(err) { console.error("Error al iniciar voz:", err); }
                 }
             }
         }
