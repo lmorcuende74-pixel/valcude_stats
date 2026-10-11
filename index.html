@@ -254,23 +254,34 @@
 
     </main>
 
-    <!-- Script General Unificado -->
+    <!-- Script General con Autoprotección de Datos -->
     <script>
-        let db = JSON.parse(localStorage.getItem('valcude_db')) || {
-            teams: ["Valcude Infantil Verde", "Valcude Infantil Blanco"],
-            rosters: {
-                "Valcude Infantil Verde": [
-                    {dorsal: 4, name: "Jugador 4"}, {dorsal: 5, name: "Jugador 5"}, {dorsal: 7, name: "Jugador 7"},
-                    {dorsal: 8, name: "Jugador 8"}, {dorsal: 10, name: "Jugador 10"}, {dorsal: 11, name: "Jugador 11"},
-                    {dorsal: 12, name: "Jugador 12"}, {dorsal: 13, name: "Jugador 13"}, {dorsal: 14, name: "Jugador 14"},
-                    {dorsal: 15, name: "Jugador 15"}, {dorsal: 33, name: "Daniel"}
-                ],
-                "Valcude Infantil Blanco": [
-                    {dorsal: 4, name: "Jugador 4"}, {dorsal: 6, name: "Jugador 6"}, {dorsal: 9, name: "Jugador 9"}
-                ]
-            },
-            matches: []
-        };
+        let db;
+        try {
+            db = JSON.parse(localStorage.getItem('valcude_db'));
+        } catch(e) {
+            db = null;
+        }
+
+        // Si la estructura antigua o corrupta existe, la reiniciamos limpiamente
+        if (!db || !db.teams || !db.rosters || Array.isArray(db.rosters)) {
+            db = {
+                teams: ["Valcude Infantil Verde", "Valcude Infantil Blanco"],
+                rosters: {
+                    "Valcude Infantil Verde": [
+                        {dorsal: 4, name: "Jugador 4"}, {dorsal: 5, name: "Jugador 5"}, {dorsal: 7, name: "Jugador 7"},
+                        {dorsal: 8, name: "Jugador 8"}, {dorsal: 10, name: "Jugador 10"}, {dorsal: 11, name: "Jugador 11"},
+                        {dorsal: 12, name: "Jugador 12"}, {dorsal: 13, name: "Jugador 13"}, {dorsal: 14, name: "Jugador 14"},
+                        {dorsal: 15, name: "Jugador 15"}, {dorsal: 33, name: "Daniel"}
+                    ],
+                    "Valcude Infantil Blanco": [
+                        {dorsal: 4, name: "Jugador 4"}, {dorsal: 6, name: "Jugador 6"}, {dorsal: 9, name: "Jugador 9"}
+                    ]
+                },
+                matches: []
+            };
+            localStorage.setItem('valcude_db', JSON.stringify(db));
+        }
 
         let currentMatchId = null;
         let selectedTouchDorsal = null;
@@ -297,6 +308,7 @@
         }
 
         window.onload = function() {
+            switchView('matches');
             renderTeamSelectors();
             renderMatchesList();
             initSpeechRecognition();
@@ -359,7 +371,8 @@
             const select = document.getElementById('adminTeamSelect');
             if(!select) return;
             const teamName = select.value;
-            const roster = db.rosters[teamName] || [];
+            if(!db.rosters[teamName]) db.rosters[teamName] = [];
+            const roster = db.rosters[teamName];
             const rosterList = document.getElementById('rosterList');
             
             if(rosterList) {
@@ -501,9 +514,8 @@
 
         function clearAllData() {
             if(confirm("¿Borrar TODOS los datos de la temporada?")) {
-                db.matches = [];
-                saveDB();
-                switchView('matches');
+                localStorage.removeItem('valcude_db');
+                location.reload();
             }
         }
 
