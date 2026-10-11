@@ -496,7 +496,7 @@
                     <div class="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-sm">
                         <span class="font-extrabold text-emerald-900">#${p.dorsal}</span>
                         <span class="text-gray-600 flex-1 ml-3">${p.name}</span>
-                        <button type="button" onclick="deleteRosterPlayer('${teamName}',${p.dorsal})" class="text-red-500 font-bold text-xs px-2 py-1">Eliminar</button>
+                        <button type="button" onclick="deleteRosterPlayer('${teamName}', ${p.dorsal})" class="text-red-500 font-bold text-xs px-2 py-1">Eliminar</button>
                     </div>
                 `).join('');
             }
@@ -565,14 +565,14 @@
             if(!match) return;
 
             if (match.mode === 'voice') {
-                document.getElementById('liveVoiceTitle').innerText = `${match.team} vs${match.rival}`;
-                document.getElementById('liveVoiceSubtitle').innerText = `${match.jornada} ·${match.date}`;
+                document.getElementById('liveVoiceTitle').innerText = `${match.team} vs ${match.rival}`;
+                document.getElementById('liveVoiceSubtitle').innerText = `${match.jornada} · ${match.date}`;
                 switchLiveTab('actions');
                 renderStatsTable();
                 switchView('live-voice');
             } else {
-                document.getElementById('liveTouchTitle').innerText = `${match.team} vs${match.rival}`;
-                document.getElementById('liveTouchSubtitle').innerText = `${match.jornada} ·${match.date}`;
+                document.getElementById('liveTouchTitle').innerText = `${match.team} vs ${match.rival}`;
+                document.getElementById('liveTouchSubtitle').innerText = `${match.jornada} · ${match.date}`;
                 
                 const roster = db.rosters[match.team] || [];
                 selectedTouchDorsal = roster.length > 0 ? roster[0].dorsal : null;
@@ -604,7 +604,7 @@
                 <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <div class="cursor-pointer flex-1" onclick="openMatch('${m.id}')">
                         <div class="text-xs font-bold text-emerald-800">${m.jornada} (${m.date}) - <span class="uppercase text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">${m.mode === 'voice' ? '🎤 Voz' : '👆 Táctil'}</span></div>
-                        <div class="text-sm font-extrabold text-gray-800">${m.team} vs${m.rival}</div>
+                        <div class="text-sm font-extrabold text-gray-800">${m.team} vs ${m.rival}</div>
                         <div class="text-[11px] text-gray-500">${m.stats.length} acciones registradas</div>
                     </div>
                     <div class="flex items-center space-x-1">
@@ -662,7 +662,7 @@
             const nameStr = player ? `(${player.name})` : '';
             const display = document.getElementById('activePlayerDisplay');
             if(display) {
-                display.innerText = selectedTouchDorsal !== null ? `#${selectedTouchDorsal}${nameStr}` : 'Selecciona dorsal';
+                display.innerText = selectedTouchDorsal !== null ? `#${selectedTouchDorsal} ${nameStr}` : 'Selecciona dorsal';
             }
         }
 
@@ -674,8 +674,8 @@
             registerAction(selectedTouchDorsal, actionName);
         }
 
-        // --- MOTOR DE RECONOCIMIENTO DE VOZ ROBUSTO CON ABORT DE iOS SAFARI ---
-        function toggleListening() {
+        // --- MOTOR DE RECONOCIMIENTO DE VOZ ROBUSTO CON LIBERACIÓN DE AUDIO EN iOS ---
+        async function toggleListening() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
                 alert("El reconocimiento de voz no está soportado en este navegador.");
@@ -684,15 +684,18 @@
 
             if (isListening) {
                 if (recognition) {
-                    try { recognition.abort(); } catch(e){}
+                    try { recognition.stop(); } catch(e){}
                 }
                 stopListeningVisuals();
                 return;
             }
 
-            // Abortar cualquier sesión anterior zombie en WebKit
-            if (recognition) {
-                try { recognition.abort(); } catch(e){}
+            // Forzar liberación previa de pistas de audio para desbloquear iOS Safari
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop());
+            } catch (err) {
+                console.log("Audio stream release note:", err);
             }
 
             recognition = new SpeechRecognition();
@@ -718,8 +721,7 @@
                 processVoiceCommand(text);
             };
 
-            recognition.onerror = (event) => { 
-                console.error("Speech recognition error:", event.error);
+            recognition.onerror = () => { 
                 stopListeningVisuals(); 
             };
             
@@ -730,7 +732,6 @@
             try {
                 recognition.start();
             } catch(e) {
-                console.error("Could not start recognition:", e);
                 stopListeningVisuals();
             }
         }
@@ -918,4 +919,46 @@
                     <td class="p-2 font-extrabold text-emerald-900">#${p.dorsal}</td>
                     <td class="p-2 font-medium text-gray-800 truncate max-w-[90px]">${p.name}</td>
                     <td class="p-2 font-extrabold text-center text-orange-600">${p.pts}</td>
-                    <td class="p-2 text-center text-gray-700">${p.t2_m}/${p.t2_a} <span class="text-[9px] text-gray-400">(${p.t2_pct
+                    <td class="p-2 text-center text-gray-700">${p.t2_m}/${p.t2_a} <span class="text-[9px] text-gray-400">(${p.t2_pct}%)</span></td>
+                    <td class="p-2 text-center text-gray-700">${p.t3_m}/${p.t3_a} <span class="text-[9px] text-gray-400">(${p.t3_pct}%)</span></td>
+                    <td class="p-2 text-center text-gray-700">${p.tl_m}/${p.tl_a} <span class="text-[9px] text-gray-400">(${p.tl_pct}%)</span></td>
+                    <td class="p-2 text-center text-gray-700">${p.reb}</td>
+                    <td class="p-2 text-center text-gray-700">${p.ast}</td>
+                </tr>
+            `).join('');
+
+            const tbodyVoice = document.getElementById('matchStatsTableBodyVoice');
+            const tbodyTouch = document.getElementById('matchStatsTableBodyTouch');
+            if(tbodyVoice) tbodyVoice.innerHTML = html;
+            if(tbodyTouch) tbodyTouch.innerHTML = html;
+        }
+
+        // --- EXPORTACIÓN CSV ANALÍTICA ---
+        function exportAnalyticsCSV() {
+            const match = db.matches.find(m => m.id === currentMatchId);
+            if(!match || match.stats.length === 0) {
+                alert("No hay datos para exportar.");
+                return;
+            }
+
+            const summary = calculatePlayerStats(match);
+            let csvContent = "Dorsal,Nombre,Puntos,T2_Anotados,T2_Intentados,T2_%,T3_Anotados,T3_Intentados,T3_%,TL_Anotados,TL_Intentados,TL_%,Rebotes,Asistencias,Robos,Perdidas,Faltas\n" 
+                + summary.map(p => `${p.dorsal},"${p.name}",${p.pts},${p.t2_m},${p.t2_a},${p.t2_pct}%,${p.t3_m},${p.t3_a},${p.t3_pct}%,${p.tl_m},${p.tl_a},${p.tl_pct}%,${p.reb},${p.ast},${p.stl},${p.tov},${p.pf}`).join("\n");
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            
+            const safeTeam = match.team.replace(/[^a-zA-Z0-9]/g, '_');
+            const safeRival = match.rival.replace(/[^a-zA-Z0-9]/g, '_');
+            link.setAttribute("href", url);
+            link.setAttribute("download", `estadisticas_analiticas_${safeTeam}_vs_${safeRival}.csv`);
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
