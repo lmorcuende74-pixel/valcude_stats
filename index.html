@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Valcude Stats">
-    <title>Valcude - Estadísticas Analíticas</title>
+    <title>Valcude - Estadísticas Analíticas y Voz</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -44,7 +44,7 @@
             </div>
             <div>
                 <h1 class="font-extrabold text-sm tracking-wide">VALCUDE STATS</h1>
-                <p class="text-[11px] text-emerald-300">Hoja Analítica y Voz/Táctil</p>
+                <p class="text-[11px] text-emerald-300">Control por Voz Inteligente</p>
             </div>
         </div>
         <div class="flex items-center space-x-2">
@@ -112,17 +112,21 @@
                 <button type="button" onclick="switchView('matches')" class="bg-white/10 text-xs px-3 py-1.5 rounded-lg shrink-0">Salir</button>
             </div>
 
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-emerald-900/10 text-center flex flex-col items-center">
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Pulsa el micro y dicta (ej: "33 rebote")</p>
+            <!-- Panel de Voz con Ayuda Esencial de un solo comando -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-emerald-900/10 text-center flex flex-col items-center">
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-1.5 mb-2 w-full">
+                    <p class="text-[11px] font-bold text-emerald-900">🗣️ Comando sugerido:</p>
+                    <p class="text-xs text-emerald-700 italic">"Ej: 33 canasta de dos"</p>
+                </div>
                 
-                <button type="button" id="micBtn" onclick="toggleListening()" class="w-24 h-24 rounded-full btn-orange text-white flex items-center justify-center shadow-lg transition active:scale-95 my-2">
-                    <svg id="micIcon" xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <button type="button" id="micBtn" onclick="toggleListening()" class="w-20 h-20 rounded-full btn-orange text-white flex items-center justify-center shadow-lg transition active:scale-95 my-1">
+                    <svg id="micIcon" xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                     </svg>
                 </button>
 
-                <div id="statusText" class="mt-2 text-sm font-semibold text-gray-700">Pulsa para hablar</div>
-                <div id="transcript" class="mt-1 text-xs text-emerald-700 italic min-h-[18px]"></div>
+                <div id="statusText" class="mt-1 text-sm font-semibold text-gray-700">Pulsa para hablar</div>
+                <div id="transcript" class="mt-1 text-xs text-emerald-700 italic min-h-[16px]"></div>
             </div>
 
             <!-- Pestañas de Navegación (Acciones vs Estadísticas) -->
@@ -138,7 +142,7 @@
                         <span class="text-xs text-gray-500 font-bold uppercase">Registro en Directo</span>
                         <button type="button" onclick="exportAnalyticsCSV()" class="text-xs text-emerald-700 font-bold hover:underline">📥 Descargar CSV Analítico</button>
                     </div>
-                    <div class="overflow-x-auto flex-1 max-h-[180px]">
+                    <div class="overflow-x-auto flex-1 max-h-[160px]">
                         <table class="w-full text-left border-collapse text-sm">
                             <thead>
                                 <tr class="bg-emerald-900/5 text-emerald-900 text-[11px] uppercase tracking-wider">
@@ -159,7 +163,7 @@
                         <span class="text-xs text-gray-500 font-bold uppercase">Resumen por Jugador</span>
                         <button type="button" onclick="exportAnalyticsCSV()" class="text-xs text-emerald-700 font-bold hover:underline">📥 Descargar CSV Analítico</button>
                     </div>
-                    <div class="overflow-x-auto flex-1 max-h-[220px]">
+                    <div class="overflow-x-auto flex-1 max-h-[180px]">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
                                 <tr class="bg-emerald-900/5 text-emerald-900 text-[10px] uppercase tracking-wider">
@@ -261,7 +265,7 @@
                         <span class="text-xs text-gray-500 font-bold uppercase">Resumen por Jugador</span>
                         <button type="button" onclick="exportAnalyticsCSV()" class="text-xs text-emerald-700 font-bold hover:underline">📥 Descargar CSV Analítico</button>
                     </div>
-                    <div class="overflow-x-auto flex-1 max-h-[180px]">
+                    <div class="overflow-x-auto flex-1 max-h-[160px]">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
                                 <tr class="bg-emerald-900/5 text-emerald-900 text-[10px] uppercase tracking-wider">
@@ -651,6 +655,7 @@
             registerAction(selectedTouchDorsal, actionName);
         }
 
+        // --- MOTOR DE RECONOCIMIENTO DE VOZ FLEXIBLE ---
         function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) return;
@@ -720,37 +725,35 @@
                 return;
             }
             const dorsal = numbers[0];
-            let action = "Acción de juego";
+            let action = "Canasta 2 Pts (+2)";
 
-            if (phrase.includes("tiro libre anotado") || phrase.includes("anota tiro libre") || phrase.includes("anota un tiro libre") || (phrase.includes("tiro libre") && (phrase.includes("anota") || phrase.includes("mete")))) {
-                action = "Tiro Libre Anotado (+1)";
-            } else if (phrase.includes("tiro libre fallado") || phrase.includes("falla tiro libre") || phrase.includes("falla un tiro libre")) {
+            if (phrase.includes("tiro libre") && (phrase.includes("fall") || phrase.includes("falla"))) {
                 action = "Tiro Libre Fallado";
-            } else if (phrase.includes("tiro libre")) {
+            } else if (phrase.includes("tiro libre") || phrase.includes("anota tiro") || phrase.includes("mete tiro")) {
                 action = "Tiro Libre Anotado (+1)";
-            } else if (phrase.includes("rebote ofensivo")) {
+            } else if (phrase.includes("rebote ofensivo") || phrase.includes("ofensivo")) {
                 action = "Rebote Ofensivo (+)";
             } else if (phrase.includes("rebote")) {
                 action = "Rebote Defensivo";
-            } else if (phrase.includes("falla tiro de dos") || phrase.includes("falla dos") || phrase.includes("falla canasta de dos") || phrase.includes("falla de dos")) {
-                action = "Fallo Tiro de 2";
-            } else if (phrase.includes("canasta de dos") || phrase.includes("anota dos") || phrase.includes("tiro de dos anotado") || phrase.includes("canasta dos")) {
-                action = "Canasta 2 Pts (+2)";
-            } else if (phrase.includes("falla triple") || phrase.includes("falla tres") || phrase.includes("falla de tres")) {
+            } else if (phrase.includes("triple") && (phrase.includes("fall") || phrase.includes("falla"))) {
                 action = "Fallo Triple";
-            } else if (phrase.includes("triple") || phrase.includes("anota tres") || phrase.includes("canasta de tres")) {
+            } else if (phrase.includes("triple") || phrase.includes("tres")) {
                 action = "Triple (+3)";
+            } else if ((phrase.includes("dos") || phrase.includes("canasta") || phrase.includes("anota")) && (phrase.includes("fall") || phrase.includes("falla"))) {
+                action = "Fallo Tiro de 2";
+            } else if (phrase.includes("dos") || phrase.includes("canasta") || phrase.includes("anota") || phrase.includes("mete")) {
+                action = "Canasta 2 Pts (+2)";
             } else if (phrase.includes("falta")) {
                 action = "Falta Personal";
             } else if (phrase.includes("robo")) {
                 action = "Robo";
-            } else if (phrase.includes("perdida")) {
+            } else if (phrase.includes("perdida") || phrase.includes("pérdida")) {
                 action = "Pérdida de Balón";
             } else if (phrase.includes("asistencia")) {
                 action = "Asistencia";
             } else {
-                action = phrase.replace(dorsal, '').trim();
-                action = action.charAt(0).toUpperCase() + action.slice(1);
+                let cleaned = phrase.replace(dorsal, '').trim();
+                action = cleaned.length > 2 ? cleaned.charAt(0).toUpperCase() + cleaned.slice(1) : "Canasta 2 Pts (+2)";
             }
 
             registerAction(dorsal, action);
@@ -809,12 +812,11 @@
             }
         }
 
-        // --- CÁLCULO DE ESTADÍSTICAS ANALÍTICAS POR JUGADOR ---
+        // --- CÁLCULO DE ESTADÍSTICAS ANALÍTICAS ---
         function calculatePlayerStats(match) {
             const roster = db.rosters[match.team] || [];
             const statsMap = {};
 
-            // Inicializar jugadores de la plantilla
             roster.forEach(p => {
                 statsMap[String(p.dorsal)] = {
                     dorsal: String(p.dorsal),
@@ -826,7 +828,6 @@
                 };
             });
 
-            // Procesar acciones del partido
             match.stats.forEach(st => {
                 let d = String(st.dorsal);
                 if (!statsMap[d]) {
@@ -841,10 +842,10 @@
                 }
 
                 const act = st.action;
-                if (act.includes("Canasta 2 Pts") || act.includes("Canasta 2") || act.includes("2 Pts")) {
+                if (act.includes("Canasta 2 Pts") || act.includes("2 Pts")) {
                     statsMap[d].t2_m++;
                     statsMap[d].t2_a++;
-                } else if (act.includes("Fallo Tiro de 2") || act.includes("Fallo de 2")) {
+                } else if (act.includes("Fallo Tiro de 2")) {
                     statsMap[d].t2_a++;
                 } else if (act.includes("Triple") && act.includes("Triple (+3)")) {
                     statsMap[d].t3_m++;
@@ -902,7 +903,7 @@
             if(tbodyTouch) tbodyTouch.innerHTML = html;
         }
 
-        // --- EXPORTACIÓN CSV ANALÍTICA HOJA DE CÁLCULO ---
+        // --- EXPORTACIÓN CSV ANALÍTICA ---
         function exportAnalyticsCSV() {
             const match = db.matches.find(m => m.id === currentMatchId);
             if(!match || match.stats.length === 0) {
@@ -911,7 +912,7 @@
             }
 
             const summary = calculatePlayerStats(match);
-            let csvContent = "Dorsal,Nombre,Puntos,T2_Anatados,T2_Intentados,T2_%,T3_Anotados,T3_Intentados,T3_%,TL_Anotados,TL_Intentados,TL_%,Rebotes,Asistencias,Robos,Perdidas,Faltas\n" 
+            let csvContent = "Dorsal,Nombre,Puntos,T2_Anotados,T2_Intentados,T2_%,T3_Anotados,T3_Intentados,T3_%,TL_Anotados,TL_Intentados,TL_%,Rebotes,Asistencias,Robos,Perdidas,Faltas\n" 
                 + summary.map(p => `${p.dorsal},"${p.name}",${p.pts},${p.t2_m},${p.t2_a},${p.t2_pct}%,${p.t3_m},${p.t3_a},${p.t3_pct}%,${p.tl_m},${p.tl_a},${p.tl_pct}%,${p.reb},${p.ast},${p.stl},${p.tov},${p.pf}`).join("\n");
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
