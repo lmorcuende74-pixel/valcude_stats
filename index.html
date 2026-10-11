@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Valcude Stats">
-    <title>Valcude - Estadísticas</title>
+    <title>Valcude - Estadísticas Analíticas</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -44,7 +44,7 @@
             </div>
             <div>
                 <h1 class="font-extrabold text-sm tracking-wide">VALCUDE STATS</h1>
-                <p class="text-[11px] text-emerald-300">Gestión de Partidos</p>
+                <p class="text-[11px] text-emerald-300">Hoja Analítica y Voz/Táctil</p>
             </div>
         </div>
         <div class="flex items-center space-x-2">
@@ -125,24 +125,58 @@
                 <div id="transcript" class="mt-1 text-xs text-emerald-700 italic min-h-[18px]"></div>
             </div>
 
+            <!-- Pestañas de Navegación (Acciones vs Estadísticas) -->
             <div class="bg-white rounded-2xl shadow-sm border border-emerald-900/10 overflow-hidden flex-1 flex flex-col">
-                <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="font-bold text-xs uppercase tracking-wider text-gray-600">Acciones Registradas</h3>
-                    <button type="button" onclick="exportCurrentMatchCSV()" class="text-xs text-emerald-700 font-bold hover:underline">📥 Descargar CSV</button>
+                <div class="bg-gray-100 p-1.5 flex gap-1 border-b border-gray-200">
+                    <button type="button" id="tabVoiceActions" onclick="switchLiveTab('actions')" class="flex-1 py-2 rounded-xl text-xs font-extrabold bg-white text-emerald-900 shadow-sm">📋 Acciones</button>
+                    <button type="button" id="tabVoiceStats" onclick="switchLiveTab('stats')" class="flex-1 py-2 rounded-xl text-xs font-extrabold text-gray-600">📊 Estadísticas</button>
                 </div>
-                <div class="overflow-x-auto flex-1 max-h-[220px]">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="bg-emerald-900/5 text-emerald-900 text-[11px] uppercase tracking-wider">
-                                <th class="p-2.5 font-bold">Dorsal</th>
-                                <th class="p-2.5 font-bold">Acción</th>
-                                <th class="p-2.5 font-bold text-right">Hora</th>
-                            </tr>
-                        </thead>
-                        <tbody id="statsTableBodyVoice" class="divide-y divide-gray-100"></tbody>
-                    </table>
+
+                <!-- Contenedor Acciones -->
+                <div id="panelVoiceActions" class="flex-1 flex flex-col">
+                    <div class="px-4 py-2 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                        <span class="text-xs text-gray-500 font-bold uppercase">Registro en Directo</span>
+                        <button type="button" onclick="exportAnalyticsCSV()" class="text-xs text-emerald-700 font-bold hover:underline">📥 Descargar CSV Analítico</button>
+                    </div>
+                    <div class="overflow-x-auto flex-1 max-h-[180px]">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-emerald-900/5 text-emerald-900 text-[11px] uppercase tracking-wider">
+                                    <th class="p-2.5 font-bold">Dorsal</th>
+                                    <th class="p-2.5 font-bold">Acción</th>
+                                    <th class="p-2.5 font-bold text-right">Hora</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statsTableBodyVoice" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                    <div id="emptyStateVoice" class="p-4 text-center text-gray-400 text-xs">Sin acciones aún. Dicta tu jugada.</div>
                 </div>
-                <div id="emptyStateVoice" class="p-4 text-center text-gray-400 text-xs">Sin acciones aún. Dicta tu jugada.</div>
+
+                <!-- Contenedor Hoja de Estadísticas -->
+                <div id="panelVoiceStats" class="hidden flex-1 flex flex-col">
+                    <div class="px-4 py-2 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                        <span class="text-xs text-gray-500 font-bold uppercase">Resumen por Jugador</span>
+                        <button type="button" onclick="exportAnalyticsCSV()" class="text-xs text-emerald-700 font-bold hover:underline">📥 Descargar CSV Analítico</button>
+                    </div>
+                    <div class="overflow-x-auto flex-1 max-h-[220px]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-emerald-900/5 text-emerald-900 text-[10px] uppercase tracking-wider">
+                                    <th class="p-2 font-bold">#</th>
+                                    <th class="p-2 font-bold">Jugador</th>
+                                    <th class="p-2 font-bold text-center">PTS</th>
+                                    <th class="p-2 font-bold text-center">T2</th>
+                                    <th class="p-2 font-bold text-center">T3</th>
+                                    <th class="p-2 font-bold text-center">TL</th>
+                                    <th class="p-2 font-bold text-center">REB</th>
+                                    <th class="p-2 font-bold text-center">AST</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matchStatsTableBodyVoice" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -193,24 +227,58 @@
                 </div>
             </div>
 
+            <!-- Pestañas de Navegación (Acciones vs Estadísticas) -->
             <div class="bg-white rounded-2xl shadow-sm border border-emerald-900/10 overflow-hidden flex-1 flex flex-col">
-                <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="font-bold text-xs uppercase tracking-wider text-gray-600">Acciones Registradas</h3>
-                    <button type="button" onclick="exportCurrentMatchCSV()" class="text-xs text-emerald-700 font-bold hover:underline">📥 Descargar CSV</button>
+                <div class="bg-gray-100 p-1.5 flex gap-1 border-b border-gray-200">
+                    <button type="button" id="tabTouchActions" onclick="switchLiveTab('actions')" class="flex-1 py-2 rounded-xl text-xs font-extrabold bg-white text-emerald-900 shadow-sm">📋 Acciones</button>
+                    <button type="button" id="tabTouchStats" onclick="switchLiveTab('stats')" class="flex-1 py-2 rounded-xl text-xs font-extrabold text-gray-600">📊 Estadísticas</button>
                 </div>
-                <div class="overflow-x-auto flex-1 max-h-[160px]">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="bg-emerald-900/5 text-emerald-900 text-[11px] uppercase tracking-wider">
-                                <th class="p-2 font-bold">Dorsal</th>
-                                <th class="p-2 font-bold">Acción</th>
-                                <th class="p-2 font-bold text-right">Hora</th>
-                            </tr>
-                        </thead>
-                        <tbody id="statsTableBodyTouch" class="divide-y divide-gray-100"></tbody>
-                    </table>
+
+                <!-- Contenedor Acciones -->
+                <div id="panelTouchActions" class="flex-1 flex flex-col">
+                    <div class="px-4 py-2 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                        <span class="text-xs text-gray-500 font-bold uppercase">Registro en Directo</span>
+                        <button type="button" onclick="exportAnalyticsCSV()" class="text-xs text-emerald-700 font-bold hover:underline">📥 Descargar CSV Analítico</button>
+                    </div>
+                    <div class="overflow-x-auto flex-1 max-h-[140px]">
+                        <table class="w-full text-left border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-emerald-900/5 text-emerald-900 text-[11px] uppercase tracking-wider">
+                                    <th class="p-2 font-bold">Dorsal</th>
+                                    <th class="p-2 font-bold">Acción</th>
+                                    <th class="p-2 font-bold text-right">Hora</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statsTableBodyTouch" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                    <div id="emptyStateTouch" class="p-4 text-center text-gray-400 text-xs">Selecciona un dorsal arriba y pulsa una acción.</div>
                 </div>
-                <div id="emptyStateTouch" class="p-4 text-center text-gray-400 text-xs">Selecciona un dorsal arriba y pulsa una acción.</div>
+
+                <!-- Contenedor Hoja de Estadísticas -->
+                <div id="panelTouchStats" class="hidden flex-1 flex flex-col">
+                    <div class="px-4 py-2 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                        <span class="text-xs text-gray-500 font-bold uppercase">Resumen por Jugador</span>
+                        <button type="button" onclick="exportAnalyticsCSV()" class="text-xs text-emerald-700 font-bold hover:underline">📥 Descargar CSV Analítico</button>
+                    </div>
+                    <div class="overflow-x-auto flex-1 max-h-[180px]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-emerald-900/5 text-emerald-900 text-[10px] uppercase tracking-wider">
+                                    <th class="p-2 font-bold">#</th>
+                                    <th class="p-2 font-bold">Jugador</th>
+                                    <th class="p-2 font-bold text-center">PTS</th>
+                                    <th class="p-2 font-bold text-center">T2</th>
+                                    <th class="p-2 font-bold text-center">T3</th>
+                                    <th class="p-2 font-bold text-center">TL</th>
+                                    <th class="p-2 font-bold text-center">REB</th>
+                                    <th class="p-2 font-bold text-center">AST</th>
+                                </tr>
+                            </thead>
+                            <tbody id="matchStatsTableBodyTouch" class="divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -303,6 +371,28 @@
             if (viewName === 'admin') {
                 renderAdminTeams();
                 renderAdminRosterSelect();
+            }
+        }
+
+        function switchLiveTab(tabName) {
+            const isVoice = !document.getElementById('view-live-voice').classList.contains('hidden');
+            
+            const btnActions = document.getElementById(isVoice ? 'tabVoiceActions' : 'tabTouchActions');
+            const btnStats = document.getElementById(isVoice ? 'tabVoiceStats' : 'tabTouchStats');
+            const panelActions = document.getElementById(isVoice ? 'panelVoiceActions' : 'panelTouchActions');
+            const panelStats = document.getElementById(isVoice ? 'panelVoiceStats' : 'panelTouchStats');
+
+            if (tabName === 'actions') {
+                btnActions.className = "flex-1 py-2 rounded-xl text-xs font-extrabold bg-white text-emerald-900 shadow-sm";
+                btnStats.className = "flex-1 py-2 rounded-xl text-xs font-extrabold text-gray-600";
+                panelActions.classList.remove('hidden');
+                panelStats.classList.add('hidden');
+            } else {
+                btnStats.className = "flex-1 py-2 rounded-xl text-xs font-extrabold bg-white text-emerald-900 shadow-sm";
+                btnActions.className = "flex-1 py-2 rounded-xl text-xs font-extrabold text-gray-600";
+                panelStats.classList.remove('hidden');
+                panelActions.classList.add('hidden');
+                renderMatchStatsTables();
             }
         }
 
@@ -454,6 +544,7 @@
             if (match.mode === 'voice') {
                 document.getElementById('liveVoiceTitle').innerText = `${match.team} vs ${match.rival}`;
                 document.getElementById('liveVoiceSubtitle').innerText = `${match.jornada} · ${match.date}`;
+                switchLiveTab('actions');
                 renderStatsTable();
                 switchView('live-voice');
             } else {
@@ -463,6 +554,7 @@
                 const roster = db.rosters[match.team] || [];
                 selectedTouchDorsal = roster.length > 0 ? roster[0].dorsal : null;
                 renderRosterMatrix(match.team);
+                switchLiveTab('actions');
                 renderStatsTable();
                 switchView('live-touch');
             }
@@ -668,7 +760,7 @@
             const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const match = db.matches.find(m => m.id === currentMatchId);
             if(match) {
-                match.stats.unshift({ dorsal, action: actionName, time: timeString });
+                match.stats.unshift({ dorsal: String(dorsal), action: actionName, time: timeString });
                 saveDB();
                 renderStatsTable();
             }
@@ -717,16 +809,110 @@
             }
         }
 
-        // --- DESCARGA DE CSV CORREGIDA CON EXTENSIÓN Y BLOB FIABLE ---
-        function exportCurrentMatchCSV() {
+        // --- CÁLCULO DE ESTADÍSTICAS ANALÍTICAS POR JUGADOR ---
+        function calculatePlayerStats(match) {
+            const roster = db.rosters[match.team] || [];
+            const statsMap = {};
+
+            // Inicializar jugadores de la plantilla
+            roster.forEach(p => {
+                statsMap[String(p.dorsal)] = {
+                    dorsal: String(p.dorsal),
+                    name: p.name,
+                    t2_m: 0, t2_a: 0,
+                    t3_m: 0, t3_a: 0,
+                    tl_m: 0, tl_a: 0,
+                    reb: 0, ast: 0, stl: 0, tov: 0, pf: 0
+                };
+            });
+
+            // Procesar acciones del partido
+            match.stats.forEach(st => {
+                let d = String(st.dorsal);
+                if (!statsMap[d]) {
+                    statsMap[d] = {
+                        dorsal: d,
+                        name: `Jugador ${d}`,
+                        t2_m: 0, t2_a: 0,
+                        t3_m: 0, t3_a: 0,
+                        tl_m: 0, tl_a: 0,
+                        reb: 0, ast: 0, stl: 0, tov: 0, pf: 0
+                    };
+                }
+
+                const act = st.action;
+                if (act.includes("Canasta 2 Pts") || act.includes("Canasta 2") || act.includes("2 Pts")) {
+                    statsMap[d].t2_m++;
+                    statsMap[d].t2_a++;
+                } else if (act.includes("Fallo Tiro de 2") || act.includes("Fallo de 2")) {
+                    statsMap[d].t2_a++;
+                } else if (act.includes("Triple") && act.includes("Triple (+3)")) {
+                    statsMap[d].t3_m++;
+                    statsMap[d].t3_a++;
+                } else if (act.includes("Fallo Triple")) {
+                    statsMap[d].t3_a++;
+                } else if (act.includes("Tiro Libre Anotado")) {
+                    statsMap[d].tl_m++;
+                    statsMap[d].tl_a++;
+                } else if (act.includes("Tiro Libre Fallado")) {
+                    statsMap[d].tl_a++;
+                } else if (act.includes("Rebote")) {
+                    statsMap[d].reb++;
+                } else if (act.includes("Asistencia")) {
+                    statsMap[d].ast++;
+                } else if (act.includes("Robo")) {
+                    statsMap[d].stl++;
+                } else if (act.includes("Pérdida")) {
+                    statsMap[d].tov++;
+                } else if (act.includes("Falta")) {
+                    statsMap[d].pf++;
+                }
+            });
+
+            return Object.values(statsMap).map(p => {
+                const pts = (p.t2_m * 2) + (p.t3_m * 3) + (p.tl_m * 1);
+                const t2_pct = p.t2_a > 0 ? Math.round((p.t2_m / p.t2_a) * 100) : 0;
+                const t3_pct = p.t3_a > 0 ? Math.round((p.t3_m / p.t3_a) * 100) : 0;
+                const tl_pct = p.tl_a > 0 ? Math.round((p.tl_m / p.tl_a) * 100) : 0;
+                return { ...p, pts, t2_pct, t3_pct, tl_pct };
+            }).sort((a,b) => parseInt(a.dorsal) - parseInt(b.dorsal));
+        }
+
+        function renderMatchStatsTables() {
+            const match = db.matches.find(m => m.id === currentMatchId);
+            if(!match) return;
+
+            const summary = calculatePlayerStats(match);
+            const html = summary.map(p => `
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="p-2 font-extrabold text-emerald-900">#${p.dorsal}</td>
+                    <td class="p-2 font-medium text-gray-800 truncate max-w-[90px]">${p.name}</td>
+                    <td class="p-2 font-extrabold text-center text-orange-600">${p.pts}</td>
+                    <td class="p-2 text-center text-gray-700">${p.t2_m}/${p.t2_a} <span class="text-[9px] text-gray-400">(${p.t2_pct}%)</span></td>
+                    <td class="p-2 text-center text-gray-700">${p.t3_m}/${p.t3_a} <span class="text-[9px] text-gray-400">(${p.t3_pct}%)</span></td>
+                    <td class="p-2 text-center text-gray-700">${p.tl_m}/${p.tl_a} <span class="text-[9px] text-gray-400">(${p.tl_pct}%)</span></td>
+                    <td class="p-2 text-center text-gray-700">${p.reb}</td>
+                    <td class="p-2 text-center text-gray-700">${p.ast}</td>
+                </tr>
+            `).join('');
+
+            const tbodyVoice = document.getElementById('matchStatsTableBodyVoice');
+            const tbodyTouch = document.getElementById('matchStatsTableBodyTouch');
+            if(tbodyVoice) tbodyVoice.innerHTML = html;
+            if(tbodyTouch) tbodyTouch.innerHTML = html;
+        }
+
+        // --- EXPORTACIÓN CSV ANALÍTICA HOJA DE CÁLCULO ---
+        function exportAnalyticsCSV() {
             const match = db.matches.find(m => m.id === currentMatchId);
             if(!match || match.stats.length === 0) {
                 alert("No hay datos para exportar.");
                 return;
             }
 
-            let csvContent = "Dorsal,Accion,Hora\n" 
-                + match.stats.map(e => `${e.dorsal},"${e.action}",${e.time}`).join("\n");
+            const summary = calculatePlayerStats(match);
+            let csvContent = "Dorsal,Nombre,Puntos,T2_Anatados,T2_Intentados,T2_%,T3_Anotados,T3_Intentados,T3_%,TL_Anotados,TL_Intentados,TL_%,Rebotes,Asistencias,Robos,Perdidas,Faltas\n" 
+                + summary.map(p => `${p.dorsal},"${p.name}",${p.pts},${p.t2_m},${p.t2_a},${p.t2_pct}%,${p.t3_m},${p.t3_a},${p.t3_pct}%,${p.tl_m},${p.tl_a},${p.tl_pct}%,${p.reb},${p.ast},${p.stl},${p.tov},${p.pf}`).join("\n");
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -735,7 +921,7 @@
             const safeTeam = match.team.replace(/[^a-zA-Z0-9]/g, '_');
             const safeRival = match.rival.replace(/[^a-zA-Z0-9]/g, '_');
             link.setAttribute("href", url);
-            link.setAttribute("download", `estadisticas_${safeTeam}_vs_${safeRival}.csv`);
+            link.setAttribute("download", `estadisticas_analiticas_${safeTeam}_vs_${safeRival}.csv`);
             
             document.body.appendChild(link);
             link.click();
