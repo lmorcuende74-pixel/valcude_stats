@@ -340,11 +340,12 @@
 
     </main>
 
-    <!-- Script General -->
+    <!-- Script General Blindado -->
     <script>
-        let db;
+        let db = null;
         try {
-            db = JSON.parse(localStorage.getItem('valcude_db'));
+            const raw = localStorage.getItem('valcude_db');
+            if (raw) db = JSON.parse(raw);
         } catch(e) {
             db = null;
         }
@@ -365,31 +366,27 @@
                 },
                 matches: []
             };
-            saveDB();
-        } else {
-            db.teams.forEach(t => {
-                if (!db.rosters[t]) db.rosters[t] = [];
-            });
+            try { localStorage.setItem('valcude_db', JSON.stringify(db)); } catch(e){}
         }
 
         let currentMatchId = null;
         let selectedTouchDorsal = null;
         let recognition = null;
         let isListening = false;
-        let recognitionTimeout = null;
 
         function saveDB() {
             try {
                 localStorage.setItem('valcude_db', JSON.stringify(db));
-            } catch(e) {
-                // Respaldo en memoria si el almacenamiento local está bloqueado (ej. modo privado en iOS)
-            }
+            } catch(e) {}
         }
 
         function switchView(viewName) {
-            if(viewName !== 'live-voice' && recognition) {
-                try { recognition.abort(); } catch(e){}
-            }
+            try {
+                if(viewName !== 'live-voice' && recognition) {
+                    recognition.abort();
+                }
+            } catch(e){}
+
             document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
             const target = document.getElementById(`view-${viewName}`);
             if(target) target.classList.remove('hidden');
@@ -424,14 +421,18 @@
         }
 
         window.onload = function() {
-            switchView('matches');
-            renderTeamSelectors();
-            renderMatchesList();
+            try {
+                switchView('matches');
+                renderTeamSelectors();
+                renderMatchesList();
+            } catch(err) {
+                console.error("Error en onload:", err);
+            }
         };
 
         function renderTeamSelectors() {
             const select = document.getElementById('matchTeam');
-            if(select) {
+            if(select && db && db.teams) {
                 const currentVal = select.value;
                 select.innerHTML = db.teams.map(t => `<option value="${t}" ${t === currentVal ? 'selected' : ''}>${t}</option>`).join('');
             }
@@ -679,7 +680,7 @@
             registerAction(selectedTouchDorsal, actionName);
         }
 
-        // --- MOTOR DE VOZ BLINDADO PARA iOS ---
+        // --- MOTOR DE VOZ ULTRA-ESTABLE PARA iPHONE ---
         function toggleListening() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
@@ -701,48 +702,45 @@
                 recognition = null;
             }
 
-            clearTimeout(recognitionTimeout);
-            recognitionTimeout = setTimeout(() => {
-                try {
-                    recognition = new SpeechRecognition();
-                    recognition.lang = 'es-ES';
-                    recognition.continuous = false;
-                    recognition.interimResults = false;
+            try {
+                recognition = new SpeechRecognition();
+                recognition.lang = 'es-ES';
+                recognition.continuous = false;
+                recognition.interimResults = false;
 
-                    recognition.onstart = () => {
-                        isListening = true;
-                        const micBtn = document.getElementById('micBtn');
-                        const statusText = document.getElementById('statusText');
-                        if(micBtn) micBtn.classList.add('listening');
-                        if(statusText) {
-                            statusText.innerText = "Escuchando jugada...";
-                            statusText.classList.add('text-orange-600');
-                        }
-                    };
+                recognition.onstart = () => {
+                    isListening = true;
+                    const micBtn = document.getElementById('micBtn');
+                    const statusText = document.getElementById('statusText');
+                    if(micBtn) micBtn.classList.add('listening');
+                    if(statusText) {
+                        statusText.innerText = "Escuchando jugada...";
+                        statusText.classList.add('text-orange-600');
+                    }
+                };
 
-                    recognition.onresult = (event) => {
-                        const text = event.results[0][0].transcript.toLowerCase();
-                        const transcriptEl = document.getElementById('transcript');
-                        if(transcriptEl) transcriptEl.innerText = `"${text}"`;
-                        processVoiceCommand(text);
-                    };
+                recognition.onresult = (event) => {
+                    const text = event.results[0][0].transcript.toLowerCase();
+                    const transcriptEl = document.getElementById('transcript');
+                    if(transcriptEl) transcriptEl.innerText = `"${text}"`;
+                    processVoiceCommand(text);
+                };
 
-                    recognition.onerror = () => { 
-                        stopListeningVisuals(); 
-                        recognition = null;
-                    };
-                    
-                    recognition.onend = () => { 
-                        stopListeningVisuals(); 
-                        recognition = null;
-                    };
-
-                    recognition.start();
-                } catch(e) {
-                    stopListeningVisuals();
+                recognition.onerror = () => { 
+                    stopListeningVisuals(); 
                     recognition = null;
-                }
-            }, 300);
+                };
+                
+                recognition.onend = () => { 
+                    stopListeningVisuals(); 
+                    recognition = null;
+                };
+
+                recognition.start();
+            } catch(e) {
+                stopListeningVisuals();
+                recognition = null;
+            }
         }
 
         function stopListeningVisuals() {
@@ -774,7 +772,6 @@
             };
 
             const words = text.trim().split(/\s+/);
-            
             if (words.length >= 3) {
                 const tripleWord = `${words[0]} ${words[1]} ${words[2]}`;
                 if (numberMap[tripleWord]) return numberMap[tripleWord];
@@ -783,11 +780,9 @@
                 const doubleWord = `${words[0]} ${words[1]}`;
                 if (numberMap[doubleWord]) return numberMap[doubleWord];
             }
-            
             if (words.length > 0 && numberMap[words[0]]) {
                 return numberMap[words[0]];
             }
-
             return null;
         }
 
