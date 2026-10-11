@@ -422,7 +422,6 @@
             switchView('matches');
             renderTeamSelectors();
             renderMatchesList();
-            initSpeechRecognition();
         };
 
         function renderTeamSelectors() {
@@ -675,12 +674,23 @@
             registerAction(selectedTouchDorsal, actionName);
         }
 
-        // --- MOTOR DE RECONOCIMIENTO DE VOZ ROBUSTO (Bucle infinito seguro en iOS Safari) ---
-        function initSpeechRecognition() {
+        // --- MOTOR DE RECONOCIMIENTO DE VOZ DINÁMICO (Compatible con iOS Safari) ---
+        function toggleListening() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return;
+            if (!SpeechRecognition) {
+                alert("El reconocimiento de voz no está soportado en este navegador.");
+                return;
+            }
 
-            // Recrear siempre una instancia fresca para evitar bloqueos en iOS
+            if (isListening) {
+                if (recognition) {
+                    try { recognition.stop(); } catch(e){}
+                }
+                stopListeningVisuals();
+                return;
+            }
+
+            // Creamos una instancia fresca en cada toque para evitar el bloqueo de zombis en iOS Safari
             recognition = new SpeechRecognition();
             recognition.lang = 'es-ES';
             recognition.continuous = false;
@@ -704,30 +714,18 @@
                 processVoiceCommand(text);
             };
 
-            recognition.onerror = () => { stopListeningVisuals(); };
+            recognition.onerror = () => { 
+                stopListeningVisuals(); 
+            };
+            
             recognition.onend = () => { 
                 stopListeningVisuals(); 
-                initSpeechRecognition(); // Regenerar la instancia al terminar para permitir el siguiente uso
             };
-        }
 
-        function toggleListening() {
-            if (!recognition) {
-                alert("El reconocimiento de voz no está soportado en este navegador.");
-                return;
-            }
-
-            if (isListening) {
-                try { recognition.stop(); } catch(e){}
+            try {
+                recognition.start();
+            } catch(e) {
                 stopListeningVisuals();
-            } else {
-                try {
-                    recognition.start();
-                } catch(e) {
-                    // Si se quedara bloqueado, reinicializamos y reintentamos inmediatamente
-                    initSpeechRecognition();
-                    try { recognition.start(); } catch(err) { console.error("Error al iniciar voz:", err); }
-                }
             }
         }
 
