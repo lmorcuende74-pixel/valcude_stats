@@ -674,7 +674,7 @@
             registerAction(selectedTouchDorsal, actionName);
         }
 
-        // --- MOTOR DE RECONOCIMIENTO DE VOZ DINÁMICO (Compatible con iOS Safari) ---
+        // --- MOTOR DE RECONOCIMIENTO DE VOZ ÓPTIMO PARA iOS ---
         function toggleListening() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) {
@@ -684,13 +684,19 @@
 
             if (isListening) {
                 if (recognition) {
-                    try { recognition.stop(); } catch(e){}
+                    try { recognition.abort(); } catch(e){}
                 }
                 stopListeningVisuals();
+                recognition = null;
                 return;
             }
 
-            // Creamos una instancia fresca en cada toque para evitar el bloqueo de zombis en iOS Safari
+            // Destruir instancia previa para evitar el bloqueo zombi en iOS Safari
+            if (recognition) {
+                try { recognition.abort(); } catch(e){}
+                recognition = null;
+            }
+
             recognition = new SpeechRecognition();
             recognition.lang = 'es-ES';
             recognition.continuous = false;
@@ -716,16 +722,19 @@
 
             recognition.onerror = () => { 
                 stopListeningVisuals(); 
+                recognition = null;
             };
             
             recognition.onend = () => { 
                 stopListeningVisuals(); 
+                recognition = null;
             };
 
             try {
                 recognition.start();
             } catch(e) {
                 stopListeningVisuals();
+                recognition = null;
             }
         }
 
@@ -740,14 +749,50 @@
             }
         }
 
+        // --- CONVERSOR DE NÚMEROS (DETECTA DÍGITOS Y PALABRAS COMO CUATRO, SIETE, ETC.) ---
+        function parseSpanishNumber(text) {
+            // Buscar dígitos primero (ej: "33")
+            const match = text.match(/\d+/);
+            if (match) return match[0];
+
+            // Mapa de palabras habladas a números
+            const numberMap = {
+                'cero': '0', 'uno': '1', 'una': '1', 'dos': '2', 'tres': '3', 
+                'cuatro': '4', 'cinco': '5', 'seis': '6', 'siete': '7', 
+                'ocho': '8', 'nueve': '9', 'diez': '10', 'once': '11', 
+                'doce': '12', 'trece': '13', 'catorce': '14', 'quince': '15',
+                'dieciséis': '16', 'dieciseis': '16', 'diecisiete': '17', 'dieciocho': '18', 'diecinueve': '19',
+                'veinte': '20', 'veintiuno': '21', 'veintidós': '22', 'veintidos': '22',
+                'veintitrés': '23', 'veintitres': '23', 'veinticuatro': '24', 'veinticinco': '25',
+                'veintiséis': '26', 'veintiseis': '26', 'veintisiete': '27', 'veintiocho': '28', 'veintinueve': '29',
+                'treinta': '30', 'treinta y uno': '31', 'treinta y dos': '32', 'treinta y tres': '33',
+                'cuarenta': '40', 'cincuenta': '50', 'sesenta': '60', 'setenta': '70', 'ochenta': '80', 'noventa': '90'
+            };
+
+            // Comprobar primero frases compuestas (ej: "treinta y tres")
+            for (let phraseKey in numberMap) {
+                if (phraseKey.includes(' ') && text.includes(phraseKey)) {
+                    return numberMap[phraseKey];
+                }
+            }
+
+            // Comprobar palabras individuales en el texto
+            const words = text.split(/\s+/);
+            for (let w of words) {
+                if (numberMap[w]) return numberMap[w];
+            }
+
+            return null;
+        }
+
         function processVoiceCommand(phrase) {
-            const numbers = phrase.match(/\d+/g);
-            if (!numbers || numbers.length === 0) {
+            const dorsal = parseSpanishNumber(phrase);
+            if (!dorsal) {
                 const transcriptEl = document.getElementById('transcript');
                 if(transcriptEl) transcriptEl.innerText = `No se oyó dorsal en: "${phrase}"`;
                 return;
             }
-            const dorsal = numbers[0];
+            
             let action = "Canasta 2 Pts (+2)";
 
             if (phrase.includes("tiro libre") && (phrase.includes("fall") || phrase.includes("falla"))) {
@@ -855,103 +900,4 @@
                 let d = String(st.dorsal);
                 if (!statsMap[d]) {
                     statsMap[d] = {
-                        dorsal: d,
-                        name: `Jugador ${d}`,
-                        t2_m: 0, t2_a: 0,
-                        t3_m: 0, t3_a: 0,
-                        tl_m: 0, tl_a: 0,
-                        reb: 0, ast: 0, stl: 0, tov: 0, pf: 0
-                    };
-                }
-
-                const act = st.action;
-                if (act.includes("Canasta 2 Pts") || act.includes("2 Pts")) {
-                    statsMap[d].t2_m++;
-                    statsMap[d].t2_a++;
-                } else if (act.includes("Fallo Tiro de 2")) {
-                    statsMap[d].t2_a++;
-                } else if (act.includes("Triple") && act.includes("Triple (+3)")) {
-                    statsMap[d].t3_m++;
-                    statsMap[d].t3_a++;
-                } else if (act.includes("Fallo Triple")) {
-                    statsMap[d].t3_a++;
-                } else if (act.includes("Tiro Libre Anotado")) {
-                    statsMap[d].tl_m++;
-                    statsMap[d].tl_a++;
-                } else if (act.includes("Tiro Libre Fallado")) {
-                    statsMap[d].tl_a++;
-                } else if (act.includes("Rebote")) {
-                    statsMap[d].reb++;
-                } else if (act.includes("Asistencia")) {
-                    statsMap[d].ast++;
-                } else if (act.includes("Robo")) {
-                    statsMap[d].stl++;
-                } else if (act.includes("Pérdida")) {
-                    statsMap[d].tov++;
-                } else if (act.includes("Falta")) {
-                    statsMap[d].pf++;
-                }
-            });
-
-            return Object.values(statsMap).map(p => {
-                const pts = (p.t2_m * 2) + (p.t3_m * 3) + (p.tl_m * 1);
-                const t2_pct = p.t2_a > 0 ? Math.round((p.t2_m / p.t2_a) * 100) : 0;
-                const t3_pct = p.t3_a > 0 ? Math.round((p.t3_m / p.t3_a) * 100) : 0;
-                const tl_pct = p.tl_a > 0 ? Math.round((p.tl_m / p.tl_a) * 100) : 0;
-                return { ...p, pts, t2_pct, t3_pct, tl_pct };
-            }).sort((a,b) => parseInt(a.dorsal) - parseInt(b.dorsal));
-        }
-
-        function renderMatchStatsTables() {
-            const match = db.matches.find(m => m.id === currentMatchId);
-            if(!match) return;
-
-            const summary = calculatePlayerStats(match);
-            const html = summary.map(p => `
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="p-2 font-extrabold text-emerald-900">#${p.dorsal}</td>
-                    <td class="p-2 font-medium text-gray-800 truncate max-w-[90px]">${p.name}</td>
-                    <td class="p-2 font-extrabold text-center text-orange-600">${p.pts}</td>
-                    <td class="p-2 text-center text-gray-700">${p.t2_m}/${p.t2_a} <span class="text-[9px] text-gray-400">(${p.t2_pct}%)</span></td>
-                    <td class="p-2 text-center text-gray-700">${p.t3_m}/${p.t3_a} <span class="text-[9px] text-gray-400">(${p.t3_pct}%)</span></td>
-                    <td class="p-2 text-center text-gray-700">${p.tl_m}/${p.tl_a} <span class="text-[9px] text-gray-400">(${p.tl_pct}%)</span></td>
-                    <td class="p-2 text-center text-gray-700">${p.reb}</td>
-                    <td class="p-2 text-center text-gray-700">${p.ast}</td>
-                </tr>
-            `).join('');
-
-            const tbodyVoice = document.getElementById('matchStatsTableBodyVoice');
-            const tbodyTouch = document.getElementById('matchStatsTableBodyTouch');
-            if(tbodyVoice) tbodyVoice.innerHTML = html;
-            if(tbodyTouch) tbodyTouch.innerHTML = html;
-        }
-
-        // --- EXPORTACIÓN CSV ANALÍTICA ---
-        function exportAnalyticsCSV() {
-            const match = db.matches.find(m => m.id === currentMatchId);
-            if(!match || match.stats.length === 0) {
-                alert("No hay datos para exportar.");
-                return;
-            }
-
-            const summary = calculatePlayerStats(match);
-            let csvContent = "Dorsal,Nombre,Puntos,T2_Anotados,T2_Intentados,T2_%,T3_Anotados,T3_Intentados,T3_%,TL_Anotados,TL_Intentados,TL_%,Rebotes,Asistencias,Robos,Perdidas,Faltas\n" 
-                + summary.map(p => `${p.dorsal},"${p.name}",${p.pts},${p.t2_m},${p.t2_a},${p.t2_pct}%,${p.t3_m},${p.t3_a},${p.t3_pct}%,${p.tl_m},${p.tl_a},${p.tl_pct}%,${p.reb},${p.ast},${p.stl},${p.tov},${p.pf}`).join("\n");
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            
-            const safeTeam = match.team.replace(/[^a-zA-Z0-9]/g, '_');
-            const safeRival = match.rival.replace(/[^a-zA-Z0-9]/g, '_');
-            link.setAttribute("href", url);
-            link.setAttribute("download", `estadisticas_analiticas_${safeTeam}_vs_${safeRival}.csv`);
-            
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        }
-    </script>
-</body>
-</html>
+                        dorsal:
