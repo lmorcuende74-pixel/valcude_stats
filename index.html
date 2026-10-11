@@ -102,6 +102,7 @@
             <!-- Panel de Voz Gigante -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-emerald-900/10 text-center flex flex-col items-center">
                 <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Pulsa el micro y dicta (ej: "33 rebote")</p>
+                <p class="text-[10px] text-emerald-700 mb-3">Pulsa el micro para cada jugada</p>
                 
                 <button id="micBtn" onclick="toggleListening()" class="w-24 h-24 rounded-full btn-orange text-white flex items-center justify-center shadow-lg transition active:scale-95 my-2">
                     <svg id="micIcon" xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -208,6 +209,7 @@
             }
             document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
             document.getElementById(`view-${viewName}`).classList.remove('hidden');
+            
             if (viewName === 'matches') renderMatchesList();
             if (viewName === 'admin') {
                 renderAdminTeams();
@@ -223,7 +225,9 @@
 
         function renderTeamSelectors() {
             const select = document.getElementById('matchTeam');
-            select.innerHTML = db.teams.map(t => `<option value="${t}">${t}</option>`).join('');
+            if(select) {
+                select.innerHTML = db.teams.map(t => `<option value="${t}">${t}</option>`).join('');
+            }
         }
 
         function addNewTeam(e) {
@@ -253,32 +257,40 @@
 
         function renderAdminTeams() {
             const list = document.getElementById('teamsList');
-            list.innerHTML = db.teams.map(t => `
-                <div class="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-sm">
-                    <span class="font-bold text-gray-700">${t}</span>
-                    <button onclick="deleteTeam('${t}')" class="text-red-500 font-bold text-xs px-2 py-1">Eliminar</button>
-                </div>
-            `).join('');
+            if(list) {
+                list.innerHTML = db.teams.map(t => `
+                    <div class="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-sm">
+                        <span class="font-bold text-gray-700">${t}</span>
+                        <button type="button" onclick="deleteTeam('${t}')" class="text-red-500 font-bold text-xs px-2 py-1">Eliminar</button>
+                    </div>
+                `).join('');
+            }
         }
 
         function renderAdminRosterSelect() {
             const select = document.getElementById('adminTeamSelect');
-            select.innerHTML = db.teams.map(t => `<option value="${t}">${t}</option>`).join('');
-            renderAdminRoster();
+            if(select) {
+                select.innerHTML = db.teams.map(t => `<option value="${t}">${t}</option>`).join('');
+                renderAdminRoster();
+            }
         }
 
         function renderAdminRoster() {
-            const teamName = document.getElementById('adminTeamSelect').value;
+            const select = document.getElementById('adminTeamSelect');
+            if(!select) return;
+            const teamName = select.value;
             const roster = db.rosters[teamName] || [];
             const rosterList = document.getElementById('rosterList');
             
-            rosterList.innerHTML = roster.map(p => `
-                <div class="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-sm">
-                    <span class="font-extrabold text-emerald-900">#${p.dorsal}</span>
-                    <span class="text-gray-600 flex-1 ml-3">${p.name}</span>
-                    <button onclick="deleteRosterPlayer('${teamName}', ${p.dorsal})" class="text-red-500 font-bold text-xs px-2 py-1">Eliminar</button>
-                </div>
-            `).join('');
+            if(rosterList) {
+                rosterList.innerHTML = roster.map(p => `
+                    <div class="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-sm">
+                        <span class="font-extrabold text-emerald-900">#${p.dorsal}</span>
+                        <span class="text-gray-600 flex-1 ml-3">${p.name}</span>
+                        <button type="button" onclick="deleteRosterPlayer('${teamName}', ${p.dorsal})" class="text-red-500 font-bold text-xs px-2 py-1">Eliminar</button>
+                    </div>
+                `).join('');
+            }
         }
 
         function addRosterPlayer(e) {
@@ -351,6 +363,8 @@
 
         function renderMatchesList() {
             const container = document.getElementById('matchesList');
+            if(!container) return;
+            
             if(db.matches.length === 0) {
                 container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No hay partidos registrados esta temporada.</p>`;
                 return;
@@ -364,8 +378,8 @@
                         <div class="text-[11px] text-gray-500">${m.stats.length} acciones registradas</div>
                     </div>
                     <div class="flex items-center space-x-1">
-                        <button onclick="openMatch('${m.id}')" class="btn-green text-white text-xs font-bold px-3 py-2 rounded-lg">Abrir</button>
-                        <button onclick="deleteMatch('${m.id}')" class="text-red-500 p-2 text-xs font-bold">🗑️</button>
+                        <button type="button" onclick="openMatch('${m.id}')" class="btn-green text-white text-xs font-bold px-3 py-2 rounded-lg">Abrir</button>
+                        <button type="button" onclick="deleteMatch('${m.id}')" class="text-red-500 p-2 text-xs font-bold">🗑️</button>
                     </div>
                 </div>
             `).join('');
@@ -390,13 +404,10 @@
             }
         }
 
-        // --- MOTOR DE VOZ BLINDADO (PULSACIÓN ÚNICA ESTABLE PARA iOS) ---
+        // --- MOTOR DE VOZ (PULSACIÓN ÚNICA) ---
         function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("El reconocimiento de voz no está soportado en este navegador.");
-                return;
-            }
+            if (!SpeechRecognition) return;
 
             recognition = new SpeechRecognition();
             recognition.lang = 'es-ES';
@@ -405,19 +416,23 @@
 
             recognition.onstart = () => {
                 isListening = true;
-                document.getElementById('micBtn').classList.add('listening');
-                document.getElementById('statusText').innerText = "Escuchando... Di dorsal y acción";
-                document.getElementById('statusText').classList.add('text-orange-600');
+                const micBtn = document.getElementById('micBtn');
+                const statusText = document.getElementById('statusText');
+                if(micBtn) micBtn.classList.add('listening');
+                if(statusText) {
+                    statusText.innerText = "Escuchando... Di dorsal y acción";
+                    statusText.classList.add('text-orange-600');
+                }
             };
 
             recognition.onresult = (event) => {
                 const text = event.results[0][0].transcript.toLowerCase();
-                document.getElementById('transcript').innerText = `"${text}"`;
+                const transcriptEl = document.getElementById('transcript');
+                if(transcriptEl) transcriptEl.innerText = `"${text}"`;
                 processVoiceCommand(text);
             };
 
-            recognition.onerror = (event) => {
-                console.warn("Speech error:", event.error);
+            recognition.onerror = () => {
                 stopListeningVisuals();
             };
 
@@ -428,7 +443,7 @@
 
         function toggleListening() {
             if (!recognition) {
-                alert("Voz no disponible.");
+                alert("El reconocimiento de voz no está soportado en este navegador.");
                 return;
             }
 
@@ -459,21 +474,11 @@
         function processVoiceCommand(phrase) {
             const numbers = phrase.match(/\d+/g);
             if (!numbers || numbers.length === 0) {
-                document.getElementById('transcript').innerText = `No se oyó dorsal en: "${phrase}"`;
+                const transcriptEl = document.getElementById('transcript');
+                if(transcriptEl) transcriptEl.innerText = `No se oyó dorsal en: "${phrase}"`;
                 return;
             }
             const dorsal = numbers[0];
-
-            // Validar si el dorsal existe en la plantilla del equipo actual
-            const match = db.matches.find(m => m.id === currentMatchId);
-            const teamRoster = match ? (db.rosters[match.team] || []) : [];
-            const playerExists = teamRoster.some(p => p.dorsal == dorsal);
-            
-            if(!playerExists && teamRoster.length > 0) {
-                // Advertencia visual pero se registra igualmente por si es un tiro libre o caso especial
-                console.log(`Dorsal #${dorsal} no registrado oficialmente en ${match.team}`);
-            }
-
             let action = "Acción de juego";
 
             if (phrase.includes("tiro libre anotado") || phrase.includes("anota tiro libre") || phrase.includes("anota un tiro libre") || (phrase.includes("tiro libre") && (phrase.includes("anota") || phrase.includes("mete")))) {
@@ -509,6 +514,7 @@
 
             const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             
+            const match = db.matches.find(m => m.id === currentMatchId);
             if(match) {
                 match.stats.unshift({ dorsal, action, time: timeString });
                 saveDB();
@@ -529,4 +535,49 @@
                 return;
             }
 
-            if(emptyState
+            if(emptyState) emptyState.style.display = 'none';
+            if(tbody) {
+                tbody.innerHTML = match.stats.map(s => `
+                    <tr class="hover:bg-gray-50/80 transition">
+                        <td class="p-2.5 font-extrabold text-emerald-900">#${s.dorsal}</td>
+                        <td class="p-2.5 font-medium text-gray-800">${s.action}</td>
+                        <td class="p-2.5 text-right text-xs text-gray-400">${s.time}</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function exportCurrentMatchCSV() {
+            const match = db.matches.find(m => m.id === currentMatchId);
+            if(!match || match.stats.length === 0) {
+                alert("No hay datos para exportar.");
+                return;
+            }
+            let csvContent = "Dorsal,Accion,Hora\n" 
+                + match.stats.map(e => `${e.dorsal},"${e.action}",${e.time}`).join("\n");
+
+            if (navigator.share) {
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const file = new File([blob], `estadisticas_${match.team}_vs_${match.rival}.csv`.replace(/\s+/g, '_'), { type: 'text/csv' });
+                navigator.share({
+                    title: 'Estadísticas Valcude',
+                    text: `Resumen: ${match.team} vs ${match.rival}`,
+                    files: [file]
+                }).catch(() => { fallbackDownloadCSV(csvContent, match); });
+            } else {
+                fallbackDownloadCSV(csvContent, match);
+            }
+        }
+
+        function fallbackDownloadCSV(csvContent, match) {
+            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `estadisticas_${match.team}_vs_${match.rival}.csv`.replace(/\s+/g, '_'));
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
