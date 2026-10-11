@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Valcude Stats">
-    <title>Valcude - Estadísticas por Voz</title>
+    <title>Valcude - Estadísticas Dual (Voz y Táctil)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -44,11 +44,11 @@
             </div>
             <div>
                 <h1 class="font-extrabold text-sm tracking-wide">VALCUDE STATS</h1>
-                <p class="text-[11px] text-emerald-300">Control por Voz y Equipos</p>
+                <p class="text-[11px] text-emerald-300">Modo Dual: Voz y Táctil Manual</p>
             </div>
         </div>
         <div class="flex items-center space-x-2">
-            <button onclick="switchView('admin')" class="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2 rounded-xl transition">
+            <button type="button" onclick="switchView('admin')" class="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2 rounded-xl transition">
                 ⚙️ Admin
             </button>
         </div>
@@ -78,7 +78,7 @@
                         </div>
                     </div>
                     <button type="submit" class="w-full btn-green text-white font-bold py-3 rounded-xl shadow transition text-sm">
-                        + Iniciar Partido (Control por Voz)
+                        + Iniciar Partido
                     </button>
                 </form>
             </div>
@@ -89,50 +89,93 @@
             </div>
         </div>
 
-        <!---------------- VISTA 2: PARTIDO EN CURSO (CONTROL POR VOZ) ---------------->
+        <!---------------- VISTA 2: PARTIDO EN CURSO (MODO DUAL: VOZ + TÁCTIL) ---------------->
         <div id="view-live" class="view hidden flex flex-col space-y-4">
             <div class="bg-valcude text-white rounded-2xl p-4 shadow flex justify-between items-center">
                 <div>
                     <span id="liveSubtitle" class="text-[10px] text-emerald-300 uppercase font-bold tracking-wider"></span>
                     <h2 id="liveTitle" class="font-extrabold text-base"></h2>
                 </div>
-                <button onclick="switchView('matches')" class="bg-white/10 text-xs px-3 py-1.5 rounded-lg shrink-0">Salir</button>
+                <button type="button" onclick="switchView('matches')" class="bg-white/10 text-xs px-3 py-1.5 rounded-lg shrink-0">Salir</button>
             </div>
 
-            <!-- Panel de Voz Gigante -->
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-emerald-900/10 text-center flex flex-col items-center">
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Pulsa el micro y dicta (ej: "33 rebote")</p>
-                <p class="text-[10px] text-emerald-700 mb-3">Pulsa el micro para cada jugada</p>
+            <!-- Panel de Control Dual (Voz + Matriz Táctil Manual) -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-emerald-900/10 space-y-3">
                 
-                <button id="micBtn" onclick="toggleListening()" class="w-24 h-24 rounded-full btn-orange text-white flex items-center justify-center shadow-lg transition active:scale-95 my-2">
-                    <svg id="micIcon" xmlns="http://www.w3.org/2000/svg" class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                    </svg>
-                </button>
+                <!-- Sección de Voz Auxiliar -->
+                <div class="flex items-center justify-between bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-200">
+                    <div class="flex items-center space-x-2">
+                        <button type="button" id="micBtn" onclick="toggleListening()" class="w-10 h-10 rounded-full btn-orange text-white flex items-center justify-center shadow transition active:scale-95 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                            </svg>
+                        </button>
+                        <div>
+                            <div id="statusText" class="text-xs font-bold text-emerald-900">Control por Voz</div>
+                            <div id="transcript" class="text-[10px] text-emerald-700 italic">Pulsa para dictar jugada</div>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">O manual ⬇️</span>
+                </div>
 
-                <div id="statusText" class="mt-2 text-sm font-semibold text-gray-700">Pulsa para hablar</div>
-                <div id="transcript" class="mt-1 text-xs text-emerald-700 italic min-h-[18px]"></div>
+                <!-- Jugador Activo Seleccionado para Táctil Manual -->
+                <div class="flex items-center justify-between bg-gray-50 p-2 rounded-xl border border-gray-200">
+                    <span class="text-xs font-bold text-gray-600 uppercase">Jugador Activo:</span>
+                    <span id="activePlayerDisplay" class="text-sm font-extrabold text-orange-600 bg-white px-3 py-0.5 rounded-lg shadow-sm border border-orange-200">Selecciona dorsal</span>
+                </div>
+
+                <!-- Matriz de Dorsales del Equipo (Táctil Manual) -->
+                <div>
+                    <div id="rosterMatrix" class="grid grid-cols-6 gap-1.5">
+                        <!-- Generado dinámicamente -->
+                    </div>
+                </div>
+
+                <hr class="border-gray-100 my-1">
+
+                <!-- Botones Gigantes de Acción Táctil Manual -->
+                <div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" onclick="addAction('Canasta 2 Pts (+2)')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold p-2.5 rounded-xl text-xs shadow transition active:scale-95">🏀 +2 Anotado</button>
+                        <button type="button" onclick="addAction('Fallo Tiro de 2')" class="bg-emerald-800 text-white font-extrabold p-2.5 rounded-xl text-xs shadow transition active:scale-95">❌ Fallo de 2</button>
+                        
+                        <button type="button" onclick="addAction('Triple (+3)')" class="btn-orange text-white font-extrabold p-2.5 rounded-xl text-xs shadow transition active:scale-95">🎯 Triple (+3)</button>
+                        <button type="button" onclick="addAction('Fallo Triple')" class="bg-amber-800 text-white font-extrabold p-2.5 rounded-xl text-xs shadow transition active:scale-95">❌ Fallo Triple</button>
+
+                        <button type="button" onclick="addAction('Tiro Libre Anotado (+1)')" class="bg-teal-600 text-white font-bold p-2 rounded-xl text-xs shadow transition active:scale-95">🎯 TL Anotado</button>
+                        <button type="button" onclick="addAction('Tiro Libre Fallado')" class="bg-teal-900 text-white font-bold p-2 rounded-xl text-xs shadow transition active:scale-95">❌ TL Fallado</button>
+
+                        <button type="button" onclick="addAction('Rebote Ofensivo (+)')" class="bg-sky-600 text-white font-bold p-2 rounded-xl text-xs shadow transition active:scale-95">📈 Reb. Ofensivo</button>
+                        <button type="button" onclick="addAction('Rebote Defensivo')" class="bg-sky-800 text-white font-bold p-2 rounded-xl text-xs shadow transition active:scale-95">🛡️ Reb. Defensivo</button>
+
+                        <button type="button" onclick="addAction('Falta Personal')" class="bg-rose-600 text-white font-bold p-2 rounded-xl text-xs shadow transition active:scale-95">⚠️ Falta</button>
+                        <button type="button" onclick="addAction('Robo')" class="bg-indigo-600 text-white font-bold p-2 rounded-xl text-xs shadow transition active:scale-95">⚡ Robo</button>
+
+                        <button type="button" onclick="addAction('Pérdida de Balón')" class="bg-red-600 text-white font-bold p-2 rounded-xl text-xs shadow transition active:scale-95">🛑 Pérdida</button>
+                        <button type="button" onclick="addAction('Asistencia')" class="bg-cyan-700 text-white font-bold p-2 rounded-xl text-xs shadow transition active:scale-95">🤝 Asistencia</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Tabla de Estadísticas -->
             <div class="bg-white rounded-2xl shadow-sm border border-emerald-900/10 overflow-hidden flex-1 flex flex-col">
                 <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
                     <h3 class="font-bold text-xs uppercase tracking-wider text-gray-600">Acciones Registradas</h3>
-                    <button onclick="exportCurrentMatchCSV()" class="text-xs text-emerald-700 font-bold hover:underline">📥 Exportar / Compartir</button>
+                    <button type="button" onclick="exportCurrentMatchCSV()" class="text-xs text-emerald-700 font-bold hover:underline">📥 Exportar / Compartir</button>
                 </div>
-                <div class="overflow-x-auto flex-1 max-h-[220px]">
+                <div class="overflow-x-auto flex-1 max-h-[160px]">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
                             <tr class="bg-emerald-900/5 text-emerald-900 text-[11px] uppercase tracking-wider">
-                                <th class="p-2.5 font-bold">Dorsal</th>
-                                <th class="p-2.5 font-bold">Acción</th>
-                                <th class="p-2.5 font-bold text-right">Hora</th>
+                                <th class="p-2 font-bold">Dorsal</th>
+                                <th class="p-2 font-bold">Acción</th>
+                                <th class="p-2 font-bold text-right">Hora</th>
                             </tr>
                         </thead>
                         <tbody id="statsTableBody" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
-                <div id="emptyState" class="p-4 text-center text-gray-400 text-xs">Sin acciones aún. Pulsa el micro y dicta tu jugada.</div>
+                <div id="emptyState" class="p-4 text-center text-gray-400 text-xs">Sin acciones aún. Usa el micro o selecciona dorsal y acción.</div>
             </div>
         </div>
 
@@ -167,12 +210,12 @@
             <div class="bg-white rounded-2xl p-4 shadow-sm border border-emerald-900/10">
                 <h2 class="font-extrabold text-sm text-red-700 mb-2 uppercase tracking-wider">Zona de Reinicio</h2>
                 <div class="flex gap-2">
-                    <button onclick="resetCurrentMatchStats()" class="flex-1 bg-red-50 text-red-600 font-bold py-2.5 rounded-xl text-xs border border-red-200">Resetear Partido Actual</button>
-                    <button onclick="clearAllData()" class="bg-red-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs">Borrar Todo</button>
+                    <button type="button" onclick="resetCurrentMatchStats()" class="flex-1 bg-red-50 text-red-600 font-bold py-2.5 rounded-xl text-xs border border-red-200">Resetear Partido Actual</button>
+                    <button type="button" onclick="clearAllData()" class="bg-red-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs">Borrar Todo</button>
                 </div>
             </div>
 
-            <button onclick="switchView('matches')" class="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-xl text-sm">Volver al Inicio</button>
+            <button type="button" onclick="switchView('matches')" class="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-xl text-sm">Volver al Inicio</button>
         </div>
 
     </main>
@@ -196,6 +239,7 @@
         };
 
         let currentMatchId = null;
+        let selectedTouchDorsal = null;
         let recognition = null;
         let isListening = false;
 
@@ -349,6 +393,10 @@
             document.getElementById('liveTitle').innerText = `${match.team} vs ${match.rival}`;
             document.getElementById('liveSubtitle').innerText = `${match.jornada} · ${match.date}`;
             
+            const roster = db.rosters[match.team] || [];
+            selectedTouchDorsal = roster.length > 0 ? roster[0].dorsal : null;
+
+            renderRosterMatrix(match.team);
             renderStatsTable();
             switchView('live');
         }
@@ -404,7 +452,49 @@
             }
         }
 
-        // --- MOTOR DE VOZ (PULSACIÓN ÚNICA) ---
+        // --- MATRIZ TÁCTIL MANUAL ---
+        function renderRosterMatrix(teamName) {
+            const roster = db.rosters[teamName] || [];
+            const container = document.getElementById('rosterMatrix');
+            if(!container) return;
+
+            if(roster.length === 0) {
+                container.innerHTML = `<p class="col-span-6 text-xs text-red-500 text-center py-2">Este equipo no tiene dorsales configurados. Añádelos en Admin.</p>`;
+                return;
+            }
+
+            container.innerHTML = roster.map(p => `
+                <button type="button" onclick="selectTouchDorsal('${teamName}', ${p.dorsal})" id="dorsalBtn_${p.dorsal}" class="py-2 rounded-xl font-extrabold text-sm border transition active:scale-95 ${selectedTouchDorsal === p.dorsal ? 'bg-orange-600 text-white border-orange-600 shadow' : 'bg-gray-50 text-emerald-900 border-gray-200'}">
+                    #${p.dorsal}
+                </button>
+            `).join('');
+            updateActivePlayerDisplay(teamName);
+        }
+
+        function selectTouchDorsal(teamName, dorsal) {
+            selectedTouchDorsal = dorsal;
+            renderRosterMatrix(teamName);
+        }
+
+        function updateActivePlayerDisplay(teamName) {
+            const roster = db.rosters[teamName] || [];
+            const player = roster.find(p => p.dorsal === selectedTouchDorsal);
+            const nameStr = player ? `(${player.name})` : '';
+            const display = document.getElementById('activePlayerDisplay');
+            if(display) {
+                display.innerText = selectedTouchDorsal !== null ? `#${selectedTouchDorsal} ${nameStr}` : 'Selecciona dorsal';
+            }
+        }
+
+        function addAction(actionName) {
+            if(selectedTouchDorsal === null) {
+                alert("Por favor, selecciona un dorsal en la matriz superior.");
+                return;
+            }
+            registerAction(selectedTouchDorsal, actionName);
+        }
+
+        // --- MOTOR DE VOZ BLINDADO ---
         function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRecognition) return;
@@ -420,7 +510,7 @@
                 const statusText = document.getElementById('statusText');
                 if(micBtn) micBtn.classList.add('listening');
                 if(statusText) {
-                    statusText.innerText = "Escuchando... Di dorsal y acción";
+                    statusText.innerText = "Escuchando jugada...";
                     statusText.classList.add('text-orange-600');
                 }
             };
@@ -466,7 +556,7 @@
             const statusText = document.getElementById('statusText');
             if(micBtn) micBtn.classList.remove('listening');
             if(statusText) {
-                statusText.innerText = "Pulsa para hablar";
+                statusText.innerText = "Control por Voz";
                 statusText.classList.remove('text-orange-600');
             }
         }
@@ -512,11 +602,15 @@
                 action = action.charAt(0).toUpperCase() + action.slice(1);
             }
 
+            registerAction(dorsal, action);
+        }
+
+        // --- REGISTRO COMÚN DE ACCIONES (Voz o Táctil) ---
+        function registerAction(dorsal, actionName) {
             const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            
             const match = db.matches.find(m => m.id === currentMatchId);
             if(match) {
-                match.stats.unshift({ dorsal, action, time: timeString });
+                match.stats.unshift({ dorsal, action: actionName, time: timeString });
                 saveDB();
                 renderStatsTable();
             }
