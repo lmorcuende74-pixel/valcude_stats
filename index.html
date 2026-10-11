@@ -57,7 +57,7 @@
     <!-- Contenido Principal -->
     <main class="flex-1 p-4 max-w-lg mx-auto w-full flex flex-col space-y-4">
 
-        <!---------------- VISTA 1: LISTA DE PARTIDOS ---------------->
+        <!---------------- VISTA 1: LISTA DE PARTIDOS Y CONFIGURACIÓN ---------------->
         <div id="view-matches" class="view flex flex-col space-y-4">
             <div class="bg-white rounded-2xl p-4 shadow-sm border border-emerald-900/10">
                 <h2 class="font-extrabold text-sm text-emerald-900 mb-3 uppercase tracking-wider">Configurar Nuevo Partido</h2>
@@ -77,6 +77,19 @@
                             <input type="text" id="matchJornada" required placeholder="Ej: Jornada 1" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-sm focus:outline-none focus:border-emerald-600">
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Forma de Introducción de Estadísticas</label>
+                        <div class="grid grid-cols-2 gap-2 mt-1">
+                            <label class="flex items-center space-x-2 p-2.5 rounded-xl border border-gray-200 bg-gray-50 cursor-pointer font-bold text-xs text-emerald-900">
+                                <input type="radio" name="inputMode" value="voice" checked class="accent-emerald-700">
+                                <span>🎤 Por Voz</span>
+                            </label>
+                            <label class="flex items-center space-x-2 p-2.5 rounded-xl border border-gray-200 bg-gray-50 cursor-pointer font-bold text-xs text-emerald-900">
+                                <input type="radio" name="inputMode" value="touch" class="accent-emerald-700">
+                                <span>👆 Táctil Rápido</span>
+                            </label>
+                        </div>
+                    </div>
                     <button type="submit" class="w-full btn-green text-white font-bold py-3 rounded-xl shadow transition text-sm">
                         + Iniciar Partido
                     </button>
@@ -89,17 +102,17 @@
             </div>
         </div>
 
-        <!---------------- VISTA 2: PARTIDO EN CURSO (CONTROL POR VOZ CONTINUA) ---------------->
-        <div id="view-live" class="view hidden flex flex-col space-y-4">
+        <!---------------- VISTA 2A: PARTIDO EN CURSO - MODO VOZ ---------------->
+        <div id="view-live-voice" class="view hidden flex flex-col space-y-4">
             <div class="bg-valcude text-white rounded-2xl p-4 shadow flex justify-between items-center">
                 <div>
-                    <span id="liveMatchSubtitle" class="text-[10px] text-emerald-300 uppercase font-bold tracking-wider"></span>
-                    <h2 id="liveMatchTitle" class="font-extrabold text-base"></h2>
+                    <span id="liveVoiceSubtitle" class="text-[10px] text-emerald-300 uppercase font-bold tracking-wider"></span>
+                    <h2 id="liveVoiceTitle" class="font-extrabold text-base"></h2>
                 </div>
                 <button onclick="switchView('matches')" class="bg-white/10 text-xs px-3 py-1.5 rounded-lg shrink-0">Salir</button>
             </div>
 
-            <!-- Panel de Voz Gigante -->
+            <!-- Panel de Voz -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-emerald-900/10 text-center flex flex-col items-center">
                 <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Dictar jugada (Ej: "33 falla tiro de dos")</p>
                 
@@ -128,10 +141,70 @@
                                 <th class="p-3 font-bold text-right">Hora</th>
                             </tr>
                         </thead>
-                        <tbody id="statsTableBody" class="divide-y divide-gray-100"></tbody>
+                        <tbody id="statsTableBodyVoice" class="divide-y divide-gray-100"></tbody>
                     </table>
                 </div>
-                <div id="emptyState" class="p-6 text-center text-gray-400 text-xs">Sin acciones aún. Dicta algo (ej: "33 falla tiro de dos").</div>
+                <div id="emptyStateVoice" class="p-6 text-center text-gray-400 text-xs">Sin acciones aún. Dicta algo.</div>
+            </div>
+        </div>
+
+        <!---------------- VISTA 2B: PARTIDO EN CURSO - MODO TÁCTIL RÁPIDO ---------------->
+        <div id="view-live-touch" class="view hidden flex flex-col space-y-4">
+            <div class="bg-valcude text-white rounded-2xl p-4 shadow flex justify-between items-center">
+                <div>
+                    <span id="liveTouchSubtitle" class="text-[10px] text-emerald-300 uppercase font-bold tracking-wider"></span>
+                    <h2 id="liveTouchTitle" class="font-extrabold text-base"></h2>
+                </div>
+                <button onclick="switchView('matches')" class="bg-white/10 text-xs px-3 py-1.5 rounded-lg shrink-0">Salir</button>
+            </div>
+
+            <!-- Panel Táctil -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-emerald-900/10 space-y-3">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-gray-700 uppercase">Dorsal Seleccionado:</label>
+                    <input type="number" id="selectedDorsal" value="33" min="0" max="99" class="w-20 text-center bg-emerald-50 border-2 border-emerald-700 text-emerald-900 font-extrabold text-lg rounded-xl p-1.5 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button onclick="addAction('Canasta 2 Pts (+2)')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold p-3 rounded-xl text-xs shadow transition active:scale-95">🏀 +2 Anotado</button>
+                    <button onclick="addAction('Fallo Tiro de 2')" class="bg-emerald-800 text-white font-extrabold p-3 rounded-xl text-xs shadow transition active:scale-95">❌ Fallo de 2</button>
+                    
+                    <button onclick="addAction('Triple (+3)')" class="btn-orange text-white font-extrabold p-3 rounded-xl text-xs shadow transition active:scale-95">🎯 Triple (+3)</button>
+                    <button onclick="addAction('Fallo Triple')" class="bg-amber-800 text-white font-extrabold p-3 rounded-xl text-xs shadow transition active:scale-95">❌ Fallo Triple</button>
+
+                    <button onclick="addAction('Tiro Libre Anotado (+1)')" class="bg-teal-600 text-white font-bold p-2.5 rounded-xl text-xs shadow transition active:scale-95">🎯 TL Anotado</button>
+                    <button onclick="addAction('Tiro Libre Fallado')" class="bg-teal-900 text-white font-bold p-2.5 rounded-xl text-xs shadow transition active:scale-95">❌ TL Fallado</button>
+
+                    <button onclick="addAction('Rebote Ofensivo (+)')" class="bg-sky-600 text-white font-bold p-2.5 rounded-xl text-xs shadow transition active:scale-95">📈 Reb. Ofensivo</button>
+                    <button onclick="addAction('Rebote Defensivo')" class="bg-sky-800 text-white font-bold p-2.5 rounded-xl text-xs shadow transition active:scale-95">🛡️ Reb. Defensivo</button>
+
+                    <button onclick="addAction('Falta Personal')" class="bg-rose-600 text-white font-bold p-2.5 rounded-xl text-xs shadow transition active:scale-95">⚠️ Falta</button>
+                    <button onclick="addAction('Robo')" class="bg-indigo-600 text-white font-bold p-2.5 rounded-xl text-xs shadow transition active:scale-95">⚡ Robo</button>
+
+                    <button onclick="addAction('Pérdida de Balón')" class="bg-red-600 text-white font-bold p-2.5 rounded-xl text-xs shadow transition active:scale-95">🛑 Pérdida</button>
+                    <button onclick="addAction('Asistencia')" class="bg-cyan-700 text-white font-bold p-2.5 rounded-xl text-xs shadow transition active:scale-95">🤝 Asistencia</button>
+                </div>
+            </div>
+
+            <!-- Tabla de Estadísticas Táctil -->
+            <div class="bg-white rounded-2xl shadow-sm border border-emerald-900/10 overflow-hidden flex-1 flex flex-col">
+                <div class="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="font-bold text-xs uppercase tracking-wider text-gray-600">Acciones Registradas</h3>
+                    <button onclick="exportCurrentMatchCSV()" class="text-xs text-emerald-700 font-bold hover:underline">Exportar CSV</button>
+                </div>
+                <div class="overflow-x-auto flex-1 max-h-[180px]">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-emerald-900/5 text-emerald-900 text-[11px] uppercase tracking-wider">
+                                <th class="p-2.5 font-bold">Dorsal</th>
+                                <th class="p-2.5 font-bold">Acción</th>
+                                <th class="p-2.5 font-bold text-right">Hora</th>
+                            </tr>
+                        </thead>
+                        <tbody id="statsTableBodyTouch" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+                <div id="emptyStateTouch" class="p-4 text-center text-gray-400 text-xs">Pulsa un botón superior para registrar.</div>
             </div>
         </div>
 
@@ -159,7 +232,7 @@
 
     </main>
 
-    <!-- Script General con Procesador de Tiros Anotados y Fallados -->
+    <!-- Script General -->
     <script>
         let db = JSON.parse(localStorage.getItem('valcude_db')) || {
             teams: ["Valcude Infantil Verde", "Valcude Infantil Blanco"],
@@ -176,7 +249,7 @@
         }
 
         function switchView(viewName) {
-            if(viewName !== 'live' && recognition) {
+            if(viewName !== 'live-voice' && recognition) {
                 shouldKeepListening = false;
                 try { recognition.stop(); } catch(e){}
             }
@@ -228,12 +301,14 @@
             const team = document.getElementById('matchTeam').value;
             const rival = document.getElementById('matchRival').value.trim();
             const jornada = document.getElementById('matchJornada').value.trim();
+            const mode = document.querySelector('input[name="inputMode"]:checked').value;
 
             const newMatch = {
                 id: 'match_' + Date.now(),
                 team,
                 rival,
                 jornada,
+                mode, // 'voice' o 'touch'
                 date: new Date().toLocaleDateString(),
                 stats: []
             };
@@ -250,10 +325,17 @@
             const match = db.matches.find(m => m.id === matchId);
             if(!match) return;
 
-            document.getElementById('liveMatchTitle').innerText = `${match.team} vs ${match.rival}`;
-            document.getElementById('liveMatchSubtitle').innerText = `${match.jornada} · ${match.date}`;
-            renderStatsTable();
-            switchView('live');
+            if (match.mode === 'voice') {
+                document.getElementById('liveVoiceTitle').innerText = `${match.team} vs ${match.rival}`;
+                document.getElementById('liveVoiceSubtitle').innerText = `${match.jornada} · ${match.date}`;
+                renderStatsTable();
+                switchView('live-voice');
+            } else {
+                document.getElementById('liveTouchTitle').innerText = `${match.team} vs ${match.rival}`;
+                document.getElementById('liveTouchSubtitle').innerText = `${match.jornada} · ${match.date}`;
+                renderStatsTable();
+                switchView('live-touch');
+            }
         }
 
         function deleteMatch(matchId) {
@@ -274,7 +356,7 @@
             container.innerHTML = db.matches.map(m => `
                 <div class="flex items-center justify-between bg-gray-50 p-3 rounded-xl border border-gray-100">
                     <div class="cursor-pointer flex-1" onclick="openMatch('${m.id}')">
-                        <div class="text-xs font-bold text-emerald-800">${m.jornada} (${m.date})</div>
+                        <div class="text-xs font-bold text-emerald-800">${m.jornada} (${m.date}) - <span class="uppercase text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">${m.mode === 'voice' ? '🎤 Voz' : '👆 Táctil'}</span></div>
                         <div class="text-sm font-extrabold text-gray-800">${m.team} vs ${m.rival}</div>
                         <div class="text-[11px] text-gray-500">${m.stats.length} acciones registradas</div>
                     </div>
@@ -305,13 +387,23 @@
             }
         }
 
-        // --- MOTOR DE VOZ ---
+        // --- MODO TÁCTIL ---
+        function addAction(actionName) {
+            const dorsal = document.getElementById('selectedDorsal').value || "0";
+            const timeString = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            const match = db.matches.find(m => m.id === currentMatchId);
+            if(match) {
+                match.stats.unshift({ dorsal, action: actionName, time: timeString });
+                saveDB();
+                renderStatsTable();
+            }
+        }
+
+        // --- MOTOR DE VOZ BLINDADO PARA iOS ---
         function initSpeechRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) {
-                alert("El reconocimiento de voz no está soportado en este navegador.");
-                return;
-            }
+            if (!SpeechRecognition) return;
 
             recognition = new SpeechRecognition();
             recognition.lang = 'es-ES';
@@ -320,14 +412,19 @@
 
             recognition.onstart = () => {
                 isListening = true;
-                document.getElementById('micBtn').classList.add('listening');
-                document.getElementById('statusText').innerText = "Escuchando jugada...";
-                document.getElementById('statusText').classList.add('text-orange-600');
+                const micBtn = document.getElementById('micBtn');
+                const statusText = document.getElementById('statusText');
+                if(micBtn) micBtn.classList.add('listening');
+                if(statusText) {
+                    statusText.innerText = "Escuchando jugada...";
+                    statusText.classList.add('text-orange-600');
+                }
             };
 
             recognition.onresult = (event) => {
                 const text = event.results[0][0].transcript.toLowerCase();
-                document.getElementById('transcript').innerText = `"${text}"`;
+                const transcriptEl = document.getElementById('transcript');
+                if(transcriptEl) transcriptEl.innerText = `"${text}"`;
                 processVoiceCommand(text);
             };
 
@@ -335,7 +432,13 @@
 
             recognition.onend = () => {
                 if (shouldKeepListening) {
-                    try { recognition.start(); } catch(e) { stopListeningVisuals(); }
+                    setTimeout(() => {
+                        try {
+                            if (shouldKeepListening) recognition.start();
+                        } catch(e) {
+                            stopListeningVisuals();
+                        }
+                    }, 250);
                 } else {
                     stopListeningVisuals();
                 }
@@ -347,7 +450,7 @@
 
             if (isListening) {
                 shouldKeepListening = false;
-                recognition.stop();
+                try { recognition.stop(); } catch(e){}
             } else {
                 shouldKeepListening = true;
                 try { recognition.start(); } catch(e) {}
@@ -357,28 +460,31 @@
         function stopListeningVisuals() {
             isListening = false;
             shouldKeepListening = false;
-            document.getElementById('micBtn').classList.remove('listening');
-            document.getElementById('statusText').innerText = "Pulsa el micro para hablar";
-            document.getElementById('statusText').classList.remove('text-orange-600');
+            const micBtn = document.getElementById('micBtn');
+            const statusText = document.getElementById('statusText');
+            if(micBtn) micBtn.classList.remove('listening');
+            if(statusText) {
+                statusText.innerText = "Pulsa el micro para hablar";
+                statusText.classList.remove('text-orange-600');
+            }
         }
 
-        // --- PROCESADOR DE COMANDOS DE VOZ AMPLIADO ---
         function processVoiceCommand(phrase) {
             const numbers = phrase.match(/\d+/g);
             if (!numbers || numbers.length === 0) {
-                document.getElementById('transcript').innerText = `No se oyó dorsal en: "${phrase}"`;
+                const transcriptEl = document.getElementById('transcript');
+                if(transcriptEl) transcriptEl.innerText = `No se oyó dorsal en: "${phrase}"`;
                 return;
             }
             const dorsal = numbers[0];
             let action = "Acción de juego";
 
-            // Lógica de Tiros Libres, Tiros de 2, Triples y resto de acciones
             if (phrase.includes("tiro libre anotado") || phrase.includes("anota tiro libre") || phrase.includes("anota un tiro libre") || (phrase.includes("tiro libre") && (phrase.includes("anota") || phrase.includes("mete")))) {
                 action = "Tiro Libre Anotado (+1)";
             } else if (phrase.includes("tiro libre fallado") || phrase.includes("falla tiro libre") || phrase.includes("falla un tiro libre")) {
                 action = "Tiro Libre Fallado";
             } else if (phrase.includes("tiro libre")) {
-                action = "Tiro Libre Anotado (+1)"; // Por defecto si solo dice "tiro libre"
+                action = "Tiro Libre Anotado (+1)";
             } else if (phrase.includes("rebote ofensivo")) {
                 action = "Rebote Ofensivo (+)";
             } else if (phrase.includes("rebote")) {
@@ -416,23 +522,45 @@
 
         function renderStatsTable() {
             const match = db.matches.find(m => m.id === currentMatchId);
-            const tbody = document.getElementById('statsTableBody');
-            const emptyState = document.getElementById('emptyState');
+            if(!match) return;
 
-            if(!match || match.stats.length === 0) {
-                tbody.innerHTML = '';
-                emptyState.style.display = 'block';
-                return;
+            if (match.mode === 'voice') {
+                const tbody = document.getElementById('statsTableBodyVoice');
+                const emptyState = document.getElementById('emptyStateVoice');
+                if(match.stats.length === 0) {
+                    if(tbody) tbody.innerHTML = '';
+                    if(emptyState) emptyState.style.display = 'block';
+                    return;
+                }
+                if(emptyState) emptyState.style.display = 'none';
+                if(tbody) {
+                    tbody.innerHTML = match.stats.map(s => `
+                        <tr class="hover:bg-gray-50/80 transition">
+                            <td class="p-3 font-extrabold text-emerald-900">#${s.dorsal}</td>
+                            <td class="p-3 font-medium text-gray-800">${s.action}</td>
+                            <td class="p-3 text-right text-xs text-gray-400">${s.time}</td>
+                        </tr>
+                    `).join('');
+                }
+            } else {
+                const tbody = document.getElementById('statsTableBodyTouch');
+                const emptyState = document.getElementById('emptyStateTouch');
+                if(match.stats.length === 0) {
+                    if(tbody) tbody.innerHTML = '';
+                    if(emptyState) emptyState.style.display = 'block';
+                    return;
+                }
+                if(emptyState) emptyState.style.display = 'none';
+                if(tbody) {
+                    tbody.innerHTML = match.stats.map(s => `
+                        <tr class="hover:bg-gray-50/80 transition">
+                            <td class="p-2.5 font-extrabold text-emerald-900">#${s.dorsal}</td>
+                            <td class="p-2.5 font-medium text-gray-800">${s.action}</td>
+                            <td class="p-2.5 text-right text-xs text-gray-400">${s.time}</td>
+                        </tr>
+                    `).join('');
+                }
             }
-
-            emptyState.style.display = 'none';
-            tbody.innerHTML = match.stats.map(s => `
-                <tr class="hover:bg-gray-50/80 transition">
-                    <td class="p-3 font-extrabold text-emerald-900">#${s.dorsal}</td>
-                    <td class="p-3 font-medium text-gray-800">${s.action}</td>
-                    <td class="p-3 text-right text-xs text-gray-400">${s.time}</td>
-                </tr>
-            `).join('');
         }
 
         function exportCurrentMatchCSV() {
