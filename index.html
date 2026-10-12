@@ -340,7 +340,7 @@
 
     </main>
 
-    <!-- Script General con Inicialización Segura (Lazy) -->
+    <!-- Script General Blindado con Gestión Segura de Voz -->
     <script>
         let db = null;
         try {
@@ -374,7 +374,7 @@
         let isListening = false;
         let recognition = null;
 
-        // Inicialización segura y diferida (Lazy) del motor de voz
+        // Inicialización segura y diferida con tolerancia a fallos en WebKit (iOS)
         function getRecognitionInstance() {
             if (recognition) return recognition;
             const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -403,8 +403,13 @@
                     processVoiceCommand(text);
                 };
 
-                recognition.onerror = () => { stopListeningVisuals(); };
-                recognition.onend = () => { stopListeningVisuals(); };
+                recognition.onerror = (event) => { 
+                    stopListeningVisuals(); 
+                };
+                
+                recognition.onend = () => { 
+                    stopListeningVisuals(); 
+                };
             } catch(e) {
                 recognition = null;
             }
@@ -717,11 +722,11 @@
             registerAction(selectedTouchDorsal, actionName);
         }
 
-        // --- CONTROL DE VOZ SEGURO ---
+        // --- CONTROL DE VOZ PROTEGIDO CONTRA BLOQUEOS EN iOS ---
         function toggleListening() {
             const rec = getRecognitionInstance();
             if (!rec) {
-                alert("El reconocimiento de voz no está soportado en este navegador.");
+                alert("El reconocimiento por voz no está soportado en este navegador. Utiliza el modo 'Táctil Manual'.");
                 return;
             }
 
@@ -737,9 +742,12 @@
                 } catch(e) {
                     try { rec.abort(); } catch(err){}
                     stopListeningVisuals();
-                    setTimeout(() => {
-                        try { rec.start(); } catch(err){}
-                    }, 100);
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                    if (isIOS) {
+                        alert("iOS Safari ha bloqueado el micrófono. Te recomendamos utilizar el modo 'Táctil Manual' para registrar las jugadas con total fluidez.");
+                    } else {
+                        alert("No se pudo iniciar la escucha de voz.");
+                    }
                 }
             }
         }
