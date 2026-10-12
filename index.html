@@ -340,7 +340,7 @@
 
     </main>
 
-    <!-- Script General Blindado -->
+    <!-- Script General con Inicialización Segura (Lazy) -->
     <script>
         let db = null;
         try {
@@ -374,39 +374,41 @@
         let isListening = false;
         let recognition = null;
 
-        // Inicialización única de la instancia de voz (Patrón Singleton para WebKit / iOS)
-        const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognitionAPI) {
-            recognition = new SpeechRecognitionAPI();
-            recognition.lang = 'es-ES';
-            recognition.continuous = false;
-            recognition.interimResults = false;
+        // Inicialización segura y diferida (Lazy) del motor de voz
+        function getRecognitionInstance() {
+            if (recognition) return recognition;
+            const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognitionAPI) return null;
+            try {
+                recognition = new SpeechRecognitionAPI();
+                recognition.lang = 'es-ES';
+                recognition.continuous = false;
+                recognition.interimResults = false;
 
-            recognition.onstart = () => {
-                isListening = true;
-                const micBtn = document.getElementById('micBtn');
-                const statusText = document.getElementById('statusText');
-                if(micBtn) micBtn.classList.add('listening');
-                if(statusText) {
-                    statusText.innerText = "Escuchando jugada...";
-                    statusText.classList.add('text-orange-600');
-                }
-            };
+                recognition.onstart = () => {
+                    isListening = true;
+                    const micBtn = document.getElementById('micBtn');
+                    const statusText = document.getElementById('statusText');
+                    if(micBtn) micBtn.classList.add('listening');
+                    if(statusText) {
+                        statusText.innerText = "Escuchando jugada...";
+                        statusText.classList.add('text-orange-600');
+                    }
+                };
 
-            recognition.onresult = (event) => {
-                const text = event.results[0][0].transcript.toLowerCase();
-                const transcriptEl = document.getElementById('transcript');
-                if(transcriptEl) transcriptEl.innerText = `"${text}"`;
-                processVoiceCommand(text);
-            };
+                recognition.onresult = (event) => {
+                    const text = event.results[0][0].transcript.toLowerCase();
+                    const transcriptEl = document.getElementById('transcript');
+                    if(transcriptEl) transcriptEl.innerText = `"${text}"`;
+                    processVoiceCommand(text);
+                };
 
-            recognition.onerror = () => { 
-                stopListeningVisuals(); 
-            };
-            
-            recognition.onend = () => { 
-                stopListeningVisuals(); 
-            };
+                recognition.onerror = () => { stopListeningVisuals(); };
+                recognition.onend = () => { stopListeningVisuals(); };
+            } catch(e) {
+                recognition = null;
+            }
+            return recognition;
         }
 
         function saveDB() {
@@ -715,27 +717,28 @@
             registerAction(selectedTouchDorsal, actionName);
         }
 
-        // --- CONTROL DE VOZ ROBUSTO PARA iOS (INSTANCIA ÚNICA) ---
+        // --- CONTROL DE VOZ SEGURO ---
         function toggleListening() {
-            if (!recognition) {
+            const rec = getRecognitionInstance();
+            if (!rec) {
                 alert("El reconocimiento de voz no está soportado en este navegador.");
                 return;
             }
 
             if (isListening) {
                 try {
-                    recognition.stop();
+                    rec.stop();
                 } catch(e) {
                     stopListeningVisuals();
                 }
             } else {
                 try {
-                    recognition.start();
+                    rec.start();
                 } catch(e) {
-                    try { recognition.abort(); } catch(err){}
+                    try { rec.abort(); } catch(err){}
                     stopListeningVisuals();
                     setTimeout(() => {
-                        try { recognition.start(); } catch(err){}
+                        try { rec.start(); } catch(err){}
                     }, 100);
                 }
             }
@@ -936,4 +939,64 @@
                 }
             });
 
-            return Object.values(stats
+            return Object.values(statsMap).map(p => {
+                const pts = (p.t2_m * 2) + (p.t3_m * 3) + (p.tl_m * 1);
+                const t2_pct = p.t2_a > 0 ? Math.round((p.t2_m / p.t2_a) * 100) : 0;
+                const t3_pct = p.t3_a > 0 ? Math.round((p.t3_m / p.t3_a) * 100) : 0;
+                const tl_pct = p.tl_a > 0 ? Math.round((p.tl_m / p.tl_a) * 100) : 0;
+                return { ...p, pts, t2_pct, t3_pct, tl_pct };
+            }).sort((a,b) => parseInt(a.dorsal) - parseInt(b.dorsal));
+        }
+
+        function renderMatchStatsTables() {
+            const match = db.matches.find(m => m.id === currentMatchId);
+            if(!match) return;
+
+            const summary = calculatePlayerStats(match);
+            const html = summary.map(p => `
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="p-2 font-extrabold text-emerald-900">#${p.dorsal}</td>
+                    <td class="p-2 font-medium text-gray-800 truncate max-w-[90px]">${p.name}</td>
+                    <td class="p-2 font-extrabold text-center text-orange-600">${p.pts}</td>
+                    <td class="p-2 text-center text-gray-700">${p.t2_m}/${p.t2_a} <span class="text-[9px] text-gray-400">(${p.t2_pct}%)</span></td>
+                    <td class="p-2 text-center text-gray-700">${p.t3_m}/${p.t3_a} <span class="text-[9px] text-gray-400">(${p.t3_pct}%)</span></td>
+                    <td class="p-2 text-center text-gray-700">${p.tl_m}/${p.tl_a} <span class="text-[9px] text-gray-400">(${p.tl_pct}%)</span></td>
+                    <td class="p-2 text-center text-gray-700">${p.reb}</td>
+                    <td class="p-2 text-center text-gray-700">${p.ast}</td>
+                </tr>
+            `).join('');
+
+            const tbodyVoice = document.getElementById('matchStatsTableBodyVoice');
+            const tbodyTouch = document.getElementById('matchStatsTableBodyTouch');
+            if(tbodyVoice) tbodyVoice.innerHTML = html;
+            if(tbodyTouch) tbodyTouch.innerHTML = html;
+        }
+
+        function exportAnalyticsCSV() {
+            const match = db.matches.find(m => m.id === currentMatchId);
+            if(!match || match.stats.length === 0) {
+                alert("No hay datos para exportar.");
+                return;
+            }
+
+            const summary = calculatePlayerStats(match);
+            let csvContent = "Dorsal,Nombre,Puntos,T2_Anotados,T2_Intentados,T2_%,T3_Anotados,T3_Intentados,T3_%,TL_Anotados,TL_Intentados,TL_%,Rebotes,Asistencias,Robos,Perdidas,Faltas\n" 
+                + summary.map(p => `${p.dorsal},"${p.name}",${p.pts},${p.t2_m},${p.t2_a},${p.t2_pct}%,${p.t3_m},${p.t3_a},${p.t3_pct}%,${p.tl_m},${p.tl_a},${p.tl_pct}%,${p.reb},${p.ast},${p.stl},${p.tov},${p.pf}`).join("\n");
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            
+            const safeTeam = match.team.replace(/[^a-zA-Z0-9]/g, '_');
+            const safeRival = match.rival.replace(/[^a-zA-Z0-9]/g, '_');
+            link.setAttribute("href", url);
+            link.setAttribute("download", `estadisticas_analiticas_${safeTeam}_vs_${safeRival}.csv`);
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
